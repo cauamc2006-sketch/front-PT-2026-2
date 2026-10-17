@@ -36,7 +36,7 @@ export default function Cadastro() {
   return (
     <main className="min-h-screen bg-[#F6F3E4] flex items-center justify-center p-6">
 
-      <div className="max-w-5xl w-full flex flex-col md:flex-row items-center justify-between gap-16 text-black">
+      <div className="flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-20 w-full max-w-[1400px]">
         <div className="bg-[#171918] text-white p-10 rounded-[48px] w-full max-w-[654px] shadow-2xl">
 
           <h1 className="text-[44px] font-[800] leading-none tracking-normal text-[#F6F3E4] text-center mb-[32] uppercase">
@@ -122,8 +122,27 @@ export default function Cadastro() {
           </form>
         </div>
 
-        <div className="hidden md:flex flex-col items-center justify-center w-full max-w-md">
-          <span className="text-xl font-bold">Imagens do Figma entrarão aqui</span>
+        <div className="hidden lg:flex flex-col items-center justify-center w-full max-w-[600px] gap-8">
+          
+          <div className="w-full flex justify-center">
+            <Image 
+              src="/logo.svg" 
+              alt="Logo do sistema" 
+              width={421} 
+              height={267} 
+              priority 
+            />           
+          </div>
+
+          <div className="w-full flex justify-center">
+            <Image 
+            src="/boneco-cadastro.svg" 
+            alt="Mascote de cadastro" 
+            width={497} 
+            height={1129} 
+          />
+          </div>
+
         </div>
 
       </div>
