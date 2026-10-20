@@ -156,7 +156,7 @@ export default function LoginPage() {
   return (
       <main className="flex min-h-screen flex-col bg-cream lg:grid lg:grid-cols-[1fr_minmax(0,0.9fr)] lg:gap-2 lg:pr-10 xl:pr-16">
       <section className="relative overflow-hidden px-6 pt-8 lg:px-16 lg:pt-14">
-        <Logo className="h-12 lg:h-16" />
+        <Logo className="h-12 lg:h-17" />
         <Courier className="absolute bottom-0 left-8 hidden w-[min(70%,420px)] lg:block xl:left-20" />
       </section>
 
