@@ -6,7 +6,7 @@ import { useState, type FormEvent } from "react";
 const field =
   "h-14 w-full rounded-full bg-cream px-6 text-base text-ink placeholder:text-ink/50 outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-ink";
 
-function Logo() {
+function Logo({ className = "" }: { className?: string}) {
   return (
     <Image
       src="/logo.png"
@@ -15,6 +15,7 @@ function Logo() {
       height={64}
       priority
       style={{ height: 220, width: "auto" }}
+      className={`w-auto ${className}`}
     />
   );
 }
@@ -27,7 +28,7 @@ function Courier({ className = "" }: { className?: string }) {
       width={420}
       height={620}
       priority
-      className={`h-auto ${className}`}
+      className={className}
     />
   );
 }
@@ -155,12 +156,13 @@ function LoginForm() {
 export default function LoginPage() {
   return (
       <main className="flex min-h-screen flex-col bg-cream lg:grid lg:grid-cols-[1fr_minmax(0,0.9fr)] lg:gap-2 lg:pr-10 xl:pr-16">
-      <section className="relative overflow-hidden px-6 pt-8 lg:px-16 lg:pt-14">
-        <Logo className="h-12 lg:h-17" />
-        <Courier className="absolute bottom-0 left-8 hidden w-[min(70%,420px)] lg:block xl:left-20" />
+      <section className="overflow-hidden px-6 pt-8 lg:px-16 lg:pt-14">
+        <div className="flex h-full w-fit flex-col items-center">
+          <Logo className="h-20 lg:h-28" />
+          <Courier className="mt-auto hidden h-[calc(100vh-13rem)] w-auto lg:block" />
+        </div>
       </section>
-
-      <section className="mt-8 flex flex-1 flex-col items-center rounded-t-[40px] bg-ink px-6 pb-16 pt-16 lg:mt-14">
+      <section className="mt-8 flex flex-1 flex-col items-center rounded-t-[40px] bg-ink px-6 pb-16 pt-16 lg:mt-36">
         <LoginForm />
       </section>
     </main>
