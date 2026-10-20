@@ -140,7 +140,7 @@ function LoginForm() {
         </button>
       </form>
 
-      <p className="mt-8 text-left text-lg text-cream">
+      <p className="mt-8 text-left text-[19px] text-cream">
         Não possui uma conta?{" "}
       <Link
         href="/cadastro"
