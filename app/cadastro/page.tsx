@@ -15,22 +15,51 @@ export default function Cadastro() {
   const [nome, setNome] = useState("")
   const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
+  const [carregando, setCarregando] = useState(false);
 
-  function lidarComCadastro(evento: React.FormEvent) {
-    evento.preventDefault() 
-    setErro("") 
+  async function lidarComCadastro(evento: React.FormEvent) {
+    evento.preventDefault(); 
+    setErro(""); 
 
     if (!nome || !username || !email || !senha || !confirmarSenha) {
-      setErro("Por favor, preencha todos os campos obrigatórios.")
-      return 
+      setErro("Por favor, preencha todos os campos obrigatórios.");
+      return; 
     }
 
     if (senha !== confirmarSenha) {
-      setErro("As senhas não coincidem. Tente novamente.")
-      return 
+      setErro("As senhas não coincidem. Tente novamente.");
+      return; 
     }
 
-    router.push('/login')
+    setCarregando(true);
+
+    try {
+      const resposta = await fetch("http://localhost:3001/user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      
+        body: JSON.stringify({ 
+          name: nome, 
+          username: username, 
+          email: email, 
+          senha: senha 
+        }), 
+      });
+
+      if (resposta.ok) {
+        router.push('/login');
+      } else {
+        const dadosErro = await resposta.json();
+        setErro(dadosErro.message || "Erro ao criar conta. Verifique os dados.");
+      }
+
+    } catch (error) {
+      setErro("Não foi possível conectar ao servidor. Verifique se o backend está rodando.");
+    } finally {
+      setCarregando(false);
+    }
   }
 
   return (
@@ -107,9 +136,12 @@ export default function Cadastro() {
 
             <button 
               type="submit" 
-              className="bg-[#6A38F3] text-white font-[600] text-[25px] leading-none tracking-normal rounded-[76px] w-full py-4 mt-10 hover:bg-[#6D28D9] transition-colors"
+              disabled={carregando} 
+              className={`bg-[#6A38F3] text-white font-[600] text-[25px] leading-none tracking-normal rounded-[76px] w-full py-4 mt-10 transition-colors ${
+                carregando ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#6D28D9]'
+              }`}
             >
-              CRIAR CONTA
+              {carregando ? 'CRIANDO CONTA...' : 'CRIAR CONTA'}
             </button>
 
             <div className="text-white font-light text-[25.38px] leading-none tracking-normal text-center mt-8">
