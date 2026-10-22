@@ -5,10 +5,15 @@ import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
+const apiUrl = (
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+).replace(/\/+$/, "")
+
 export default function Cadastro() {
   const router = useRouter()
   const [mostrarSenha, setMostrarSenha] = useState(false)
   const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false)
+  const [carregando, setCarregando] = useState(false)
   const [senha, setSenha] = useState("")
   const [confirmarSenha, setConfirmarSenha] = useState("")
   const [erro, setErro] = useState("")
@@ -16,13 +21,22 @@ export default function Cadastro() {
   const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
 
-  function lidarComCadastro(evento: React.FormEvent) {
+  async function lidarComCadastro(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault() 
     setErro("") 
 
-    if (!nome || !username || !email || !senha || !confirmarSenha) {
+    const nomeCompleto = nome.trim()
+    const nomeUsuario = username.trim()
+    const emailNormalizado = email.trim()
+
+    if (!nomeCompleto || !nomeUsuario || !emailNormalizado || !senha || !confirmarSenha) {
       setErro("Por favor, preencha todos os campos obrigatórios.")
       return 
+    }
+
+    if (senha.length < 8) {
+      setErro("A senha deve ter no mínimo 8 caracteres.")
+      return
     }
 
     if (senha !== confirmarSenha) {
@@ -30,7 +44,64 @@ export default function Cadastro() {
       return 
     }
 
-    router.push('/login')
+    setCarregando(true)
+    try {
+      let response: Response
+      try {
+        response = await fetch(`${apiUrl}/user`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: nomeUsuario,
+            name: nomeCompleto,
+            email: emailNormalizado,
+            senha,
+          }),
+        })
+      } catch {
+        setErro("Não foi possível conectar à API. Verifique se o servidor está online.")
+        return
+      }
+
+      if (!response.ok) {
+        let mensagem = ""
+        try {
+          const resultado: unknown = await response.json()
+          if (
+            typeof resultado === "object" &&
+            resultado !== null &&
+            "message" in resultado
+          ) {
+            const mensagemApi = resultado.message
+            if (typeof mensagemApi === "string") {
+              mensagem = mensagemApi
+            } else if (
+              Array.isArray(mensagemApi) &&
+              mensagemApi.every((item): item is string => typeof item === "string")
+            ) {
+              mensagem = mensagemApi.join(" ")
+            }
+          }
+        } catch {
+          // A API pode retornar uma resposta sem JSON em caso de erro.
+        }
+
+        if (response.status === 409) {
+          setErro("Este e-mail ou username já está cadastrado.")
+        } else if (response.status === 400 && mensagem) {
+          setErro(mensagem)
+        } else {
+          setErro(
+            "Não foi possível criar a conta. Confira se o e-mail e o username já estão cadastrados e tente novamente.",
+          )
+        }
+        return
+      }
+
+      router.push("/login")
+    } finally {
+      setCarregando(false)
+    }
   }
 
   return (
@@ -47,21 +118,27 @@ export default function Cadastro() {
 
             <div className="flex flex-col gap-[15px] w-full">
               <input
+                id="nome"
                 type="text"
+                autoComplete="name"
                 placeholder="Nome Completo"
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
                 className="bg-[#F6F3E4] rounded-[72px] w-full px-6 py-4 outline-none focus:ring-2 focus:ring-[#7C3AED] font-light text-[25px] leading-none tracking-normal text-[#858585] placeholder-[#858585]"
               />
               <input
+                id="username"
                 type="text"
+                autoComplete="username"
                 placeholder="Username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="bg-[#F6F3E4] rounded-[72px] w-full px-6 py-4 outline-none focus:ring-2 focus:ring-[#7C3AED] font-light text-[25px] leading-none tracking-normal text-[#858585] placeholder-[#858585]"
               />
               <input
+                id="email"
                 type="email"
+                autoComplete="email"
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -69,7 +146,9 @@ export default function Cadastro() {
               />
               <div className="relative w-full">
                 <input
+                id="senha"
                 type={mostrarSenha ? "text" : "password"}
+                autoComplete="new-password"
                 placeholder="Senha"
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
@@ -85,7 +164,9 @@ export default function Cadastro() {
               </div>
               <div className="relative w-full">
                 <input
+                id="confirmar-senha"
                 type={mostrarConfirmarSenha ? "text" : "password"}
+                autoComplete="new-password"
                 placeholder="Confirmar Senha"
                 value={confirmarSenha}
                 onChange={(e) => setConfirmarSenha(e.target.value)}
@@ -102,14 +183,15 @@ export default function Cadastro() {
             </div>
 
             {erro && (
-              <p className="text-red-500 text-sm font-semibold text-center mt-4">{erro}</p>
+              <p role="alert" className="text-red-500 text-sm font-semibold text-center mt-4">{erro}</p>
             )}
 
             <button 
               type="submit" 
+              disabled={carregando}
               className="bg-[#6A38F3] text-white font-[600] text-[25px] leading-none tracking-normal rounded-[76px] w-full py-4 mt-10 hover:bg-[#6D28D9] transition-colors"
             >
-              CRIAR CONTA
+              {carregando ? "CRIANDO CONTA..." : "CRIAR CONTA"}
             </button>
 
             <div className="text-white font-light text-[25.38px] leading-none tracking-normal text-center mt-8">
