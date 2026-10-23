@@ -20,6 +20,7 @@ export default function Cadastro() {
   const [nome, setNome] = useState("")
   const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
+  const [carregando, setCarregando] = useState(false);
 
   async function lidarComCadastro(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault() 
@@ -40,8 +41,8 @@ export default function Cadastro() {
     }
 
     if (senha !== confirmarSenha) {
-      setErro("As senhas não coincidem. Tente novamente.")
-      return 
+      setErro("As senhas não coincidem. Tente novamente.");
+      return; 
     }
 
     setCarregando(true)
@@ -173,10 +174,12 @@ export default function Cadastro() {
 
             <button 
               type="submit" 
-              disabled={carregando}
-              className="bg-[#6A38F3] text-white font-[600] text-[25px] leading-none tracking-normal rounded-[76px] w-full py-4 mt-10 hover:bg-[#6D28D9] transition-colors"
+              disabled={carregando} 
+              className={`bg-[#6A38F3] text-white font-[600] text-[25px] leading-none tracking-normal rounded-[76px] w-full py-4 mt-10 transition-colors ${
+                carregando ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#6D28D9]'
+              }`}
             >
-              {carregando ? "CRIANDO CONTA..." : "CRIAR CONTA"}
+              {carregando ? 'CRIANDO CONTA...' : 'CRIAR CONTA'}
             </button>
 
             <div className="text-white font-light text-[25.38px] leading-none tracking-normal text-center mt-8">
