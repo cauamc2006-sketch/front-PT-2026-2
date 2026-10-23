@@ -9,6 +9,9 @@ const apiUrl = (
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
 ).replace(/\/+$/, "")
 
+const inputClass =
+  "bg-[#F6F3E4] rounded-[72px] w-full px-6 py-4 outline-none focus:ring-2 focus:ring-[#7C3AED] font-light text-[25px] leading-none tracking-normal text-[#858585] placeholder-[#858585]"
+
 export default function Cadastro() {
   const router = useRouter()
   const [mostrarSenha, setMostrarSenha] = useState(false)
@@ -20,11 +23,10 @@ export default function Cadastro() {
   const [nome, setNome] = useState("")
   const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
-  const [carregando, setCarregando] = useState(false);
 
   async function lidarComCadastro(evento: React.FormEvent<HTMLFormElement>) {
-    evento.preventDefault() 
-    setErro("") 
+    evento.preventDefault()
+    setErro("")
 
     const nomeCompleto = nome.trim()
     const nomeUsuario = username.trim()
@@ -32,7 +34,7 @@ export default function Cadastro() {
 
     if (!nomeCompleto || !nomeUsuario || !emailNormalizado || !senha || !confirmarSenha) {
       setErro("Por favor, preencha todos os campos obrigatórios.")
-      return 
+      return
     }
 
     if (senha.length < 8) {
@@ -41,8 +43,8 @@ export default function Cadastro() {
     }
 
     if (senha !== confirmarSenha) {
-      setErro("As senhas não coincidem. Tente novamente.");
-      return; 
+      setErro("As senhas não coincidem. Tente novamente.")
+      return
     }
 
     setCarregando(true)
@@ -106,7 +108,7 @@ export default function Cadastro() {
       <div className="flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-20 w-full max-w-[1400px]">
         <div className="bg-[#171918] text-white p-10 rounded-[48px] w-full max-w-[654px] shadow-2xl">
 
-          <h1 className="text-[44px] font-[800] leading-none tracking-normal text-[#F6F3E4] text-center mb-[32] uppercase">
+          <h1 className="text-[44px] font-[800] leading-none tracking-normal text-[#F6F3E4] text-center mb-[32px] uppercase">
             Crie sua conta
           </h1>
 
@@ -115,55 +117,85 @@ export default function Cadastro() {
             <div className="flex flex-col gap-[15px] w-full">
               <input
                 type="text"
+                aria-label="Nome Completo"
+                required
                 placeholder="Nome Completo"
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
-                className="bg-[#F6F3E4] rounded-[72px] w-full px-6 py-4 outline-none focus:ring-2 focus:ring-[#7C3AED] font-light text-[25px] leading-none tracking-normal text-[#858585] placeholder-[#858585]"
+                className={inputClass}
               />
               <input
                 type="text"
+                aria-label="Username"
+                required
                 placeholder="Username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="bg-[#F6F3E4] rounded-[72px] w-full px-6 py-4 outline-none focus:ring-2 focus:ring-[#7C3AED] font-light text-[25px] leading-none tracking-normal text-[#858585] placeholder-[#858585]"
+                className={inputClass}
               />
               <input
                 type="email"
+                aria-label="Email"
+                required
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-[#F6F3E4] rounded-[72px] w-full px-6 py-4 outline-none focus:ring-2 focus:ring-[#7C3AED] font-light text-[25px] leading-none tracking-normal text-[#858585] placeholder-[#858585]"
+                className={inputClass}
               />
               <div className="relative w-full">
                 <input
-                type={mostrarSenha ? "text" : "password"}
-                placeholder="Senha"
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
-                className="bg-[#F6F3E4] rounded-[72px] w-full px-6 py-4 outline-none focus:ring-2 focus:ring-[#7C3AED] font-light text-[25px] leading-none tracking-normal text-[#858585] placeholder-[#858585]"
+                  type={mostrarSenha ? "text" : "password"}
+                  aria-label="Senha"
+                  required
+                  placeholder="Senha"
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
+                  className={`${inputClass} pr-16`}
                 />
                 <button
-                type="button"
-                onClick={() => setMostrarSenha(!mostrarSenha)}
-                className="absolute right-6 top-1/2 -translate-y-1/2 cursor-pointer"
+                  type="button"
+                  onClick={() => setMostrarSenha(!mostrarSenha)}
+                  aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
+                  aria-pressed={mostrarSenha}
+                  className="absolute right-6 top-1/2 -translate-y-1/2 cursor-pointer"
                 >
-                  <Image src="/olho.svg" alt="Mostrar/Ocultar Senha" width={24} height={24} />
+                  <Image
+                    src="/olho.svg"
+                    alt=""
+                    width={24}
+                    height={24}
+                    className={mostrarSenha ? "" : "opacity-50"}
+                  />
                 </button>
               </div>
               <div className="relative w-full">
                 <input
-                type={mostrarConfirmarSenha ? "text" : "password"}
-                placeholder="Confirmar Senha"
-                value={confirmarSenha}
-                onChange={(e) => setConfirmarSenha(e.target.value)}
-                className="bg-[#F6F3E4] rounded-[72px] w-full px-6 py-4 outline-none focus:ring-2 focus:ring-[#7C3AED] font-light text-[25px] leading-none tracking-normal text-[#858585] placeholder-[#858585]"
+                  type={mostrarConfirmarSenha ? "text" : "password"}
+                  aria-label="Confirmar Senha"
+                  required
+                  placeholder="Confirmar Senha"
+                  value={confirmarSenha}
+                  onChange={(e) => setConfirmarSenha(e.target.value)}
+                  className={`${inputClass} pr-16`}
                 />
                 <button
-                type="button"
-                onClick={() => setMostrarConfirmarSenha(!mostrarConfirmarSenha)}
-                className="absolute right-6 top-1/2 -translate-y-1/2 cursor-pointer"
+                  type="button"
+                  onClick={() => setMostrarConfirmarSenha(!mostrarConfirmarSenha)}
+                  aria-label={
+                    mostrarConfirmarSenha
+                      ? "Ocultar confirmação de senha"
+                      : "Mostrar confirmação de senha"
+                  }
+                  aria-pressed={mostrarConfirmarSenha}
+                  className="absolute right-6 top-1/2 -translate-y-1/2 cursor-pointer"
                 >
-                  <Image src="/olho.svg" alt="Mostrar/Ocultar Senha" width={24} height={24} />
+                  <Image
+                    src="/olho.svg"
+                    alt=""
+                    width={24}
+                    height={24}
+                    className={mostrarConfirmarSenha ? "" : "opacity-50"}
+                  />
                 </button>
               </div>
             </div>
@@ -172,9 +204,9 @@ export default function Cadastro() {
               <p className="text-red-500 text-sm font-semibold text-center mt-4">{erro}</p>
             )}
 
-            <button 
-              type="submit" 
-              disabled={carregando} 
+            <button
+              type="submit"
+              disabled={carregando}
               className={`bg-[#6A38F3] text-white font-[600] text-[25px] leading-none tracking-normal rounded-[76px] w-full py-4 mt-10 transition-colors ${
                 carregando ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#6D28D9]'
               }`}
@@ -193,24 +225,24 @@ export default function Cadastro() {
         </div>
 
         <div className="hidden lg:flex flex-col items-center justify-center w-full max-w-[600px] gap-8">
-          
+
           <div className="w-full flex justify-center">
-            <Image 
-              src="/logo.svg" 
-              alt="Logo do sistema" 
-              width={421} 
-              height={267} 
-              priority 
-            />           
+            <Image
+              src="/logo.svg"
+              alt="Logo do sistema"
+              width={421}
+              height={267}
+              priority
+            />
           </div>
 
           <div className="w-full flex justify-center">
-            <Image 
-            src="/boneco-cadastro.svg" 
-            alt="Mascote de cadastro" 
-            width={497} 
-            height={1129} 
-          />
+            <Image
+              src="/boneco-cadastro.svg"
+              alt="Mascote de cadastro"
+              width={497}
+              height={1129}
+            />
           </div>
 
         </div>
