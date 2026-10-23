@@ -1,7 +1,12 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+
+const apiUrl = (
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+).replace(/\/+$/, "");
 
 const field =
   "h-14 w-full rounded-full bg-cream px-6 text-base text-ink placeholder:text-ink/50 outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-ink";
@@ -9,7 +14,7 @@ const field =
 function Logo({ className = "" }: { className?: string}) {
   return (
     <Image
-      src="/logo.png"
+      src="/Logo.png"
       alt="STOCK.IO"
       width={280}
       height={64}
@@ -34,6 +39,7 @@ function Courier({ className = "" }: { className?: string }) {
 }
 
 function LoginForm() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -52,10 +58,56 @@ function LoginForm() {
     setError(null);
     setLoading(true);
     try {
-      // TODO: chamar a API de login aqui (ex.: fetch("/api/login", ...))
-      // e redirecionar com useRouter().push("/") em caso de sucesso.
-    } catch {
-      setError("Não foi possível entrar. Confira seus dados e tente de novo.");
+      let response: Response;
+      try {
+        response = await fetch(`${apiUrl}/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, senha: password }),
+        });
+      } catch {
+        setError("Não foi possível conectar à API. Verifique se o servidor está online.");
+        return;
+      }
+
+      if (response.status === 401) {
+        setError("E-mail ou senha inválidos.");
+        return;
+      }
+
+      if (!response.ok) {
+        setError("Não foi possível entrar agora. Tente novamente mais tarde.");
+        return;
+      }
+
+      let result: unknown;
+      try {
+        result = await response.json();
+      } catch {
+        setError("A resposta do servidor foi inválida. Tente novamente.");
+        return;
+      }
+
+      if (
+        typeof result !== "object" ||
+        result === null ||
+        !("token" in result) ||
+        typeof result.token !== "string" ||
+        !("userId" in result) ||
+        typeof result.userId !== "number"
+      ) {
+        setError("A resposta do servidor foi inválida. Tente novamente.");
+        return;
+      }
+
+      try {
+        localStorage.setItem("token", result.token);
+      } catch {
+        setError("Não foi possível salvar sua sessão neste navegador.");
+        return;
+      }
+
+      router.replace("/");
     } finally {
       setLoading(false);
     }

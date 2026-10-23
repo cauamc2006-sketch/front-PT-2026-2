@@ -5,10 +5,15 @@ import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
+const apiUrl = (
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+).replace(/\/+$/, "")
+
 export default function Cadastro() {
   const router = useRouter()
   const [mostrarSenha, setMostrarSenha] = useState(false)
   const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false)
+  const [carregando, setCarregando] = useState(false)
   const [senha, setSenha] = useState("")
   const [confirmarSenha, setConfirmarSenha] = useState("")
   const [erro, setErro] = useState("")
@@ -17,13 +22,22 @@ export default function Cadastro() {
   const [email, setEmail] = useState("")
   const [carregando, setCarregando] = useState(false);
 
-  async function lidarComCadastro(evento: React.FormEvent) {
-    evento.preventDefault(); 
-    setErro(""); 
+  async function lidarComCadastro(evento: React.FormEvent<HTMLFormElement>) {
+    evento.preventDefault() 
+    setErro("") 
 
-    if (!nome || !username || !email || !senha || !confirmarSenha) {
-      setErro("Por favor, preencha todos os campos obrigatórios.");
-      return; 
+    const nomeCompleto = nome.trim()
+    const nomeUsuario = username.trim()
+    const emailNormalizado = email.trim()
+
+    if (!nomeCompleto || !nomeUsuario || !emailNormalizado || !senha || !confirmarSenha) {
+      setErro("Por favor, preencha todos os campos obrigatórios.")
+      return 
+    }
+
+    if (senha.length < 8) {
+      setErro("A senha deve ter no mínimo 8 caracteres.")
+      return
     }
 
     if (senha !== confirmarSenha) {
@@ -31,34 +45,58 @@ export default function Cadastro() {
       return; 
     }
 
-    setCarregando(true);
-
+    setCarregando(true)
     try {
-      const resposta = await fetch("http://localhost:3001/user", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      
-        body: JSON.stringify({ 
-          name: nome, 
-          username: username, 
-          email: email, 
-          senha: senha 
-        }), 
-      });
-
-      if (resposta.ok) {
-        router.push('/login');
-      } else {
-        const dadosErro = await resposta.json();
-        setErro(dadosErro.message || "Erro ao criar conta. Verifique os dados.");
+      let response: Response
+      try {
+        response = await fetch(`${apiUrl}/user`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: nomeUsuario,
+            name: nomeCompleto,
+            email: emailNormalizado,
+            senha,
+          }),
+        })
+      } catch {
+        setErro("Não foi possível conectar à API. Verifique se o servidor está online.")
+        return
       }
 
-    } catch (error) {
-      setErro("Não foi possível conectar ao servidor. Verifique se o backend está rodando.");
+      if (!response.ok) {
+        let mensagem = ""
+        try {
+          const resultado: unknown = await response.json()
+          if (
+            typeof resultado === "object" &&
+            resultado !== null &&
+            "message" in resultado
+          ) {
+            const mensagemApi = resultado.message
+            if (typeof mensagemApi === "string") {
+              mensagem = mensagemApi
+            } else if (
+              Array.isArray(mensagemApi) &&
+              mensagemApi.every((item): item is string => typeof item === "string")
+            ) {
+              mensagem = mensagemApi.join(" ")
+            }
+          }
+        } catch {
+          mensagem = ""
+        }
+
+        setErro(
+          mensagem ||
+            "Não foi possível criar a conta. Confira os dados e tente novamente.",
+        )
+        return
+      }
+
+      router.push("/login")
     } finally {
-      setCarregando(false);
+      setCarregando(false)
     }
   }
 
