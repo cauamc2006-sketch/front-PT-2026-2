@@ -21,8 +21,9 @@ export function ProfileNavbar({ storesHref }: { storesHref?: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const token = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
-  const preview = pathname === "/perfil/previa";
-  const authenticated = preview || Boolean(token);
+  const signedOutPreview = pathname === "/perfil/previa/deslogado";
+  const preview = pathname === "/perfil/previa" || signedOutPreview;
+  const authenticated = !signedOutPreview && (preview || Boolean(token));
   return <header className={styles.navbar}>
     <nav className={styles.navContent} aria-label="Navegação principal">
       <Link href="/" className={styles.brandLink}><img src="/stock-profile/logo-reference.svg" width="226" height="52" alt="STOCK.IO — Página inicial" /></Link>
@@ -32,7 +33,7 @@ export function ProfileNavbar({ storesHref }: { storesHref?: string }) {
         {authenticated ? <>
           <Link href={preview ? "/perfil/previa" : "/perfil"} aria-label="Meu perfil" aria-current="page" className={`${styles.navIcon} ${styles.activeProfile}`} title="Meu perfil"><Icon name="user" /></Link>
           <button type="button" className={styles.navIcon} aria-label="Sair da conta" title="Sair da conta" onClick={() => { clearSession(); router.replace("/login"); }}><Icon name="logout" /></button>
-        </> : <Link href="/login" className={styles.signIn}>Entrar</Link>}
+        </> : signedOutPreview ? <Link href="/login" className={styles.navIcon} aria-label="Entrar na conta" title="Entrar na conta"><Icon name="user" /></Link> : <Link href="/login" className={styles.signIn}>Entrar</Link>}
       </div>
     </nav>
   </header>;

@@ -20,6 +20,7 @@ Os PNGs originais enviados não foram alterados. Fotos dos produtos são exibida
 ## Rotas
 
 - `/perfil/previa`: apresentação visual, funciona sem servidor. Dados de referência, edição e prévia de foto apenas em memória. Recarregar restaura os exemplos. Não altera senhas nem exclui contas reais.
+- `/perfil/previa/deslogado`: estado visual deslogado com os mesmos dados de demonstração. Não mostra Editar Perfil nem permite abrir modais de conta; o ícone de usuário fica neutro e leva ao login. Não apaga uma sessão real existente. Cards e expansão continuam disponíveis.
 - `/perfil`: usuário real autenticado. Usa o token salvo pelo login existente e `NEXT_PUBLIC_API_URL` (padrão `http://localhost:3001`).
 
 ## Funcionalidades reais conectadas
@@ -38,6 +39,8 @@ Contrato conferido no back-end do grupo, branch `dev`, com controladores e DTOs 
 O `sub` do JWT só seleciona o registro: a autorização deve ser validada no servidor. Há carregamento, erros, sessão expirada, nova tentativa, validações, prevenção de envio duplicado, retorno e contenção do foco, e Escape. Senhas não são gravadas em localStorage nem em logs.
 
 ## Dependências externas que continuam fora desta entrega de front-end
+
+A visualização pública real por usuário ainda precisa de um contrato de API para dados públicos; a rota deslogada acima é uma demonstração sem API, não uma forma de contornar a autenticação de `/perfil`.
 
 O servidor atual **não tem upload/edição de foto** nem consulta implementada dos produtos pertencentes ao usuário. Por isso:
 
