@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import CardProduto from './components/CardProduto';
-import CardCategoria from './components/CardCategoria';
+import CardProduto from '../components/CardProduto';
+import CardCategoria from '../components/CardCategoria';
 
 export default function Feed() {
   return (
@@ -37,14 +37,14 @@ export default function Feed() {
         <div className="mb-12">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Categoria</h2>
           <div className="flex gap-6 overflow-x-auto pb-4">
-            <CardCategoria icone="/Feed/Group 36.png" nome="Mercado" />
-            <CardCategoria icone="/Feed/Group 38.png" nome="Farmácia" />
-            <CardCategoria icone="/Feed/Group 33.png" nome="Beleza" />
-            <CardCategoria icone="/Feed/Group 35.png" nome="Moda" />
-            <CardCategoria icone="/Feed/Group 39.png" nome="Eletrônicos" />
-            <CardCategoria icone="/Feed/Group 37.png" nome="Jogos" />
-            <CardCategoria icone="/Feed/Group 40.png" nome="Brinquedos" />
-            <CardCategoria icone="/Feed/Group 41.png" nome="Casa" />
+            <CardCategoria icone="/Feed/categoriaMercado.png" nome="Mercado" />
+            <CardCategoria icone="/Feed/categoriaFarmacia.png" nome="Farmácia" />
+            <CardCategoria icone="/Feed/categoriaBeleza.png" nome="Beleza" />
+            <CardCategoria icone="/Feed/categoriaModa.png" nome="Moda" />
+            <CardCategoria icone="/Feed/categoriaEletronicos.png" nome="Eletrônicos" />
+            <CardCategoria icone="/Feed/categoriaJogos.png" nome="Jogos" />
+            <CardCategoria icone="/Feed/categoriaBrinquedos.png" nome="Brinquedos" />
+            <CardCategoria icone="/Feed/categoriaCasa.png" nome="Casa" />
           </div>
         </div>
 
