@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { League_Spartan } from "next/font/google";
 import "./globals.css";
+import Navbar from "./components/Navbar";
 
 const leagueSpartan = League_Spartan({
   variable: "--font-league-spartan",
@@ -9,7 +10,7 @@ const leagueSpartan = League_Spartan({
 });
 
 export const metadata: Metadata = {
-  title: "Entrar | STOCK.IO",
+  title: "STOCK.IO",
   description: "Acesse sua conta no STOCK.IO.",
 };
 
@@ -19,7 +20,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="pt-BR"
       className={`${leagueSpartan.variable} h-full antialiased`}
     >
-      <body className={`${leagueSpartan.className} min-h-full flex flex-col`}>{children}</body>
+      <body className={`${leagueSpartan.className} min-h-full flex flex-col`}>
+        <Navbar /> 
+        
+        <main className="flex-grow"> 
+          {children}
+        </main>
+      </body>
     </html>
   );
 }
