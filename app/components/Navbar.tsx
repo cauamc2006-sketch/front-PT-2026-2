@@ -3,7 +3,7 @@ import Image from 'next/image';
 
 export default function Navbar() {
   return (
-    <nav className="bg-[#171918] w-full px-8 py-5 flex items-center justify-between shadow-md">
+    <nav className="bg-[#000000] w-full px-8 py-5 flex items-center justify-between shadow-md">
       <Link href="/">
         <Image 
           src="/logo-branca.png" 
