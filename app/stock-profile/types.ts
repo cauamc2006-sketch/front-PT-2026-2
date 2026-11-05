@@ -1,3 +1,12 @@
+export interface ImageRegion {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  sourceWidth: number;
+  sourceHeight: number;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -5,6 +14,10 @@ export interface Product {
   imageUrl?: string;
   imageAlt?: string;
   href?: string;
+  storeLogoUrl?: string;
+  storeName?: string;
+  available?: boolean;
+  imageRegion?: ImageRegion;
 }
 
 export interface Profile {
