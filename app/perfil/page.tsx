@@ -1,5 +1,6 @@
 "use client";
 
+<<<<<<< HEAD
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -8,6 +9,11 @@ import { ProfileApiError, changePassword, deleteAccount, loadProfile, saveProfil
 import { clearSession, readSession, SESSION_CHANGED } from "../stock-profile/session";
 import type { Profile, ProfileActions } from "../stock-profile/types";
 import styles from "../stock-profile/profile.module.css";
+=======
+import { useEffect, useRef, useState } from "react";
+import { ProfileScreen } from "../stock-profile/ProfileScreen";
+import type { Product, Profile } from "../stock-profile/types";
+>>>>>>> dev
 
 type State = { kind: "loading" } | { kind: "signed-out" } | { kind: "error"; message: string } | { kind: "ready"; profile: Profile };
 

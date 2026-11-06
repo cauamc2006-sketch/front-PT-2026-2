@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from "react";
 import { Icon } from "./Icons";
 import { Avatar, ProfileModals } from "./ProfileModals";
-import { ProductCard } from "./ProductCard";
+import CardProduto from "../components/CardProduto";
 import type { Product, Profile, ProfileActions } from "./types";
 import styles from "./profile.module.css";
 
@@ -42,7 +42,7 @@ export function ProfileScreen({ profile, products, isOwnProfile, navbar, backHre
           <h2 id="stock-products-title">Produtos</h2>
           {products.length > 0 && (allProductsHref ? <a href={allProductsHref}>ver mais</a> : products.length > 5 ? <button type="button" aria-expanded={showAll} onClick={() => setShowAll(!showAll)}>{showAll ? "ver menos" : "ver mais"}</button> : null)}
         </div>
-        {products.length ? <div className={styles.productGrid}>{visibleProducts.map(product => <ProductCard key={product.id} product={product} />)}</div> : <p className={styles.empty}>{emptyProductsMessage}</p>}
+        {products.length ? <div className={styles.productGrid}>{visibleProducts.map(product => <CardProduto key={product.id} imagemUrl={product.imageUrl || "/Logo.png"} nome={product.name || "Produto"} preco={`R$ ${product.price || "0,00"}`} lojaLogo="/Logo.png" />)}</div> : <p className={styles.empty}>Nenhum produto cadastrado ainda.</p>}
       </section>
       <p role="status" className={notice ? styles.notice : styles.srOnly}>{notice}</p>
     </main>
