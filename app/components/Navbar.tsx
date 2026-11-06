@@ -1,13 +1,37 @@
 'use client'
 import Link from 'next/link';
 import Image from 'next/image';
-import React, { useState } from 'react';
-import { usePathname } from 'next/navigation';
+import React, { useSyncExternalStore } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { clearSession, readSession, SESSION_CHANGED } from '../stock-profile/session';
+
+function subscribeSession(listener: () => void) {
+  window.addEventListener('storage', listener);
+  window.addEventListener(SESSION_CHANGED, listener);
+  return () => {
+    window.removeEventListener('storage', listener);
+    window.removeEventListener(SESSION_CHANGED, listener);
+  };
+}
+
+function getSessionSnapshot() {
+  return readSession() !== null;
+}
+
+function getServerSessionSnapshot() {
+  return false;
+}
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   
-  const [estaLogado, setEstaLogado] = useState(false);
+  const estaLogado = useSyncExternalStore(subscribeSession, getSessionSnapshot, getServerSessionSnapshot);
+
+  function handleLogout() {
+    clearSession();
+    router.replace('/login');
+  }
 
   if (pathname === '/login' || pathname === '/cadastro') {
     return null;
@@ -97,7 +121,7 @@ export default function Navbar() {
                 />
               </Link>
 
-              <button onClick={() => setEstaLogado(false)} className="relative w-[38px] h-[38px] group cursor-pointer">
+              <button onClick={handleLogout} aria-label="Sair da conta" title="Sair da conta" className="relative w-[38px] h-[38px] group cursor-pointer">
                 <Image 
                   src="/Navbar/fluent_arrow-exit-28-filled.png" 
                   alt="Sair" 

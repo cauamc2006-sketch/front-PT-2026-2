@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ProfileScreen } from "../../stock-profile/ProfileScreen";
 import { ProfileApiError, changePassword, deleteAccount, loadProfile, saveProfile } from "../../stock-profile/profile-api";
 import { clearSession, readSession, SESSION_CHANGED } from "../../stock-profile/session";
-import type { Product, Profile, ProfileActions } from "../../stock-profile/types";
+import type { Profile, ProfileActions } from "../../stock-profile/types";
 import styles from "../../stock-profile/profile.module.css";
 
 type State = { kind: "loading" } | { kind: "signed-out" } | { kind: "error"; message: string } | { kind: "ready"; profile: Profile };

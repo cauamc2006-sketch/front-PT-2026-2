@@ -14,37 +14,52 @@ function mensagemErro(erro: unknown): string {
 
 export default function LojasPage() {
   const [lojas, setLojas] = useState<Loja[]>([]);
-  const [usuarioId, setUsuarioId] = useState<number | null>(null);
+  const [usuarioId, setUsuarioId] = useState<number | null>(() => readSession()?.userId ?? null);
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
   const [aviso, setAviso] = useState("");
   const [formulario, setFormulario] = useState<FormState>(vazio);
   const [editandoId, setEditandoId] = useState<number | null>(null);
+  const [reload, setReload] = useState(0);
 
-  const carregar = useCallback(async () => {
+  const carregar = useCallback(() => {
     setCarregando(true);
-    setErro("");
-    try {
-      setLojas(await lojasApi.listar());
-    } catch (e) {
-      setErro(mensagemErro(e));
-    } finally {
-      setCarregando(false);
-    }
+    setReload((r) => r + 1);
   }, []);
 
   useEffect(() => {
+    let ativo = true;
+
+    lojasApi
+      .listar()
+      .then((data) => {
+        if (ativo) {
+          setLojas(data);
+          setErro("");
+        }
+      })
+      .catch((e: unknown) => {
+        if (ativo) {
+          setErro(mensagemErro(e));
+        }
+      })
+      .finally(() => {
+        if (ativo) {
+          setCarregando(false);
+        }
+      });
+
     const atualizarSessao = () => setUsuarioId(readSession()?.userId ?? null);
-    atualizarSessao();
-    void carregar();
     window.addEventListener(SESSION_CHANGED, atualizarSessao);
     window.addEventListener("storage", atualizarSessao);
+
     return () => {
+      ativo = false;
       window.removeEventListener(SESSION_CHANGED, atualizarSessao);
       window.removeEventListener("storage", atualizarSessao);
     };
-  }, [carregar]);
+  }, [reload]);
 
   function cancelar() {
     setEditandoId(null);
@@ -71,7 +86,7 @@ export default function LojasPage() {
         setAviso("Loja atualizada com sucesso.");
       }
       cancelar();
-      await carregar();
+      carregar();
     } catch (e) {
       setErro(mensagemErro(e));
     } finally {
@@ -96,7 +111,7 @@ export default function LojasPage() {
       await lojasApi.excluir(loja.id);
       if (editandoId === loja.id) cancelar();
       setAviso("Loja excluída.");
-      await carregar();
+      carregar();
     } catch (e) {
       setErro(mensagemErro(e));
     } finally {
@@ -141,7 +156,7 @@ export default function LojasPage() {
         <section>
           <div className="mb-4 flex items-center justify-between gap-3">
             <h2 className="text-2xl font-bold">Lojas cadastradas</h2>
-            <button type="button" disabled={carregando} onClick={() => void carregar()} className="rounded-xl border border-[#6A38F3] px-4 py-2 text-sm font-semibold text-[#6A38F3] disabled:opacity-50">Atualizar</button>
+            <button type="button" disabled={carregando} onClick={carregar} className="rounded-xl border border-[#6A38F3] px-4 py-2 text-sm font-semibold text-[#6A38F3] disabled:opacity-50">Atualizar</button>
           </div>
           {carregando ? <p role="status">Carregando lojas...</p> : lojas.length === 0 ? <p>Nenhuma loja encontrada.</p> : (
             <div className="grid gap-4 sm:grid-cols-2">

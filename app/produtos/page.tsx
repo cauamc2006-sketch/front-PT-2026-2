@@ -12,17 +12,39 @@ export default function ProdutosPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reload, setReload] = useState(0);
-  const retry = useCallback(() => setReload((value) => value + 1), []);
+  const retry = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    setReload((value) => value + 1);
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
     if (demo) return () => controller.abort();
-    setLoading(true);
-    setError(null);
-    getProducts(controller.signal).then((items) => { setProducts(items); setError(null); }).catch((reason: unknown) => {
-      if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : "Erro ao carregar produtos.");
-    }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
-    return () => controller.abort();
+    let ativo = true;
+
+    getProducts(controller.signal)
+      .then((items) => {
+        if (ativo) {
+          setProducts(items);
+          setError(null);
+        }
+      })
+      .catch((reason: unknown) => {
+        if (ativo && !controller.signal.aborted) {
+          setError(reason instanceof Error ? reason.message : "Erro ao carregar produtos.");
+        }
+      })
+      .finally(() => {
+        if (ativo && !controller.signal.aborted) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      ativo = false;
+      controller.abort();
+    };
   }, [reload, demo]);
 
   const visibleProducts = demo ? demoProducts : products;

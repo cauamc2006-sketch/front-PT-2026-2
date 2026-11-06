@@ -21,15 +21,26 @@ export default function Feed() {
   const [reload, setReload] = useState(0);
   useEffect(() => {
     const controller = new AbortController();
-    setLoading(true);
-    setError(null);
+    let ativo = true;
+
     getProducts(controller.signal)
-      .then(setProducts)
-      .catch((reason: unknown) => {
-        if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : "Erro ao consultar produtos.");
+      .then((items) => {
+        if (ativo) {
+          setProducts(items);
+          setLoading(false);
+        }
       })
-      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
-    return () => controller.abort();
+      .catch((reason: unknown) => {
+        if (ativo && !controller.signal.aborted) {
+          setError(reason instanceof Error ? reason.message : "Erro ao consultar produtos.");
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      ativo = false;
+      controller.abort();
+    };
   }, [reload]);
   const filtered = useMemo(() => products.filter((p) =>
     p.ativo !== false && p.nome.toLocaleLowerCase("pt-BR").includes(query.toLocaleLowerCase("pt-BR"))
@@ -61,13 +72,14 @@ export default function Feed() {
           </div>
           {loading ? <p role="status">Carregando produtos...</p> : error ? (
             <div role="alert" className="bg-white rounded-xl p-5">
-              <p>{error}</p><button type="button" onClick={() => setReload((v) => v + 1)} className="mt-3 underline text-purple-600">Tentar novamente</button>
+              <p>{error}</p><button type="button" onClick={() => { setLoading(true); setError(null); setReload((v) => v + 1); }} className="mt-3 underline text-purple-600">Tentar novamente</button>
             </div>
           ) : filtered.length === 0 ? <p>Nenhum produto encontrado.</p> : (
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
               {filtered.slice(0, 15).map((p) => (
                 <article key={p.id} className="bg-white rounded-3xl p-4 shadow-sm">
                   <div className="h-36 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 text-sm overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     {p.imagens?.[0]?.urlImagem ? <img src={p.imagens[0].urlImagem} alt={p.nome} className="h-full w-full object-contain" /> : <span>Sem imagem</span>}
                   </div>
                   <h3 className="font-semibold text-gray-800 mt-3 truncate">{p.nome}</h3>

@@ -18,7 +18,7 @@ function idPositivo(valor: string): number | null {
 
 export default function ComentariosPage() {
   const [comentarios, setComentarios] = useState<Comentario[]>([]);
-  const [usuarioId, setUsuarioId] = useState<number | null>(null);
+  const [usuarioId, setUsuarioId] = useState<number | null>(() => readSession()?.userId ?? null);
   const [tipo, setTipo] = useState<TipoAvaliacao>("produto");
   const [avaliacaoId, setAvaliacaoId] = useState("");
   const [conteudo, setConteudo] = useState("");
@@ -27,36 +27,48 @@ export default function ComentariosPage() {
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
   const [aviso, setAviso] = useState("");
+  const [reload, setReload] = useState(0);
 
-  const carregar = useCallback(async () => {
+  const carregar = useCallback(() => {
     setCarregando(true);
-    setErro("");
-    try {
-      const id = avaliacaoId.trim() ? idPositivo(avaliacaoId) : null;
-      if (avaliacaoId.trim() && id === null) {
-        setErro("O ID da avaliação deve ser um número inteiro positivo.");
-        return;
-      }
-      const filtro = id === null ? undefined : tipo === "produto" ? { avaliacaoProdutoId: id } : { avaliacaoLojaId: id };
-      setComentarios(await comentariosApi.listar(filtro));
-    } catch (error) {
-      setErro(mensagemErro(error));
-    } finally {
-      setCarregando(false);
-    }
-  }, [tipo, avaliacaoId]);
+    setReload((r) => r + 1);
+  }, []);
 
   useEffect(() => {
+    let ativo = true;
+
+    async function buscar() {
+      try {
+        const id = avaliacaoId.trim() ? idPositivo(avaliacaoId) : null;
+        if (avaliacaoId.trim() && id === null) {
+          if (ativo) setErro("O ID da avaliação deve ser um número inteiro positivo.");
+          return;
+        }
+        const filtro = id === null ? undefined : tipo === "produto" ? { avaliacaoProdutoId: id } : { avaliacaoLojaId: id };
+        const data = await comentariosApi.listar(filtro);
+        if (ativo) {
+          setComentarios(data);
+          setErro("");
+        }
+      } catch (error) {
+        if (ativo) setErro(mensagemErro(error));
+      } finally {
+        if (ativo) setCarregando(false);
+      }
+    }
+
+    void buscar();
+
     const atualizarSessao = () => setUsuarioId(readSession()?.userId ?? null);
-    atualizarSessao();
-    void carregar();
     window.addEventListener(SESSION_CHANGED, atualizarSessao);
     window.addEventListener("storage", atualizarSessao);
+
     return () => {
+      ativo = false;
       window.removeEventListener(SESSION_CHANGED, atualizarSessao);
       window.removeEventListener("storage", atualizarSessao);
     };
-  }, [carregar]);
+  }, [tipo, avaliacaoId, reload]);
 
   function cancelarEdicao() {
     setEditando(null);
@@ -88,7 +100,7 @@ export default function ComentariosPage() {
         setAviso("Comentário atualizado.");
       }
       cancelarEdicao();
-      await carregar();
+      carregar();
     } catch (error) {
       setErro(mensagemErro(error));
     } finally {
@@ -113,7 +125,7 @@ export default function ComentariosPage() {
       await comentariosApi.excluir(comentario.id);
       if (editando === comentario.id) cancelarEdicao();
       setAviso("Comentário excluído.");
-      await carregar();
+      carregar();
     } catch (error) {
       setErro(mensagemErro(error));
     } finally {
@@ -149,7 +161,7 @@ export default function ComentariosPage() {
             </div>
           </div>
           <p className="text-sm text-gray-600">O ID aqui é o da <strong>avaliação</strong>, não o do produto ou da loja. Deixe vazio para ver todos os comentários.</p>
-          <button type="button" onClick={() => void carregar()} disabled={carregando} className="rounded-xl border border-[#6A38F3] px-5 py-2 font-semibold text-[#6A38F3] disabled:opacity-50">Atualizar lista</button>
+          <button type="button" onClick={carregar} disabled={carregando} className="rounded-xl border border-[#6A38F3] px-5 py-2 font-semibold text-[#6A38F3] disabled:opacity-50">Atualizar lista</button>
         </section>
 
         {usuarioId !== null ? (
