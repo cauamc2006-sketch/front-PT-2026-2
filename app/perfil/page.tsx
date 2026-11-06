@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ProfileScreen } from "../../components/stock-profile/ProfileScreen";
-import type { Product, Profile } from "../../components/stock-profile/types";
+import { ProfileScreen } from "../stock-profile/ProfileScreen";
+import type { Product, Profile } from "../stock-profile/types";
 
 const initialProfile: Profile = { id: "demo", name: "Selena Gomez", username: "selenagomez", email: "selenamariagomez@exemplo.com" };
 const products: Product[] = [
