@@ -20,7 +20,6 @@ export default function Cadastro() {
   const [nome, setNome] = useState("")
   const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
-  const [carregando, setCarregando] = useState(false);
 
   async function lidarComCadastro(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault() 
