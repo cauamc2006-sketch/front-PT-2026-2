@@ -1,181 +1,220 @@
 "use client";
 
-import Link from "next/link";
-import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { lojasApi, type Loja } from "@/lib/stockio-api";
-import { readSession, SESSION_CHANGED } from "@/app/stock-profile/session";
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import Navbar from "@/app/components/Navbar";
 
-type FormState = { nome: string; descricao: string };
-const vazio: FormState = { nome: "", descricao: "" };
+function SecaoCategorias() {
+  const categorias = [
+    { nome: 'Mercado', img: '/Feed/categoriaMercado.png' },
+    { nome: 'Farmácia', img: '/Feed/categoriaFarmacia.png' },
+    { nome: 'Beleza', img: '/Feed/categoriaBeleza.png' },
+    { nome: 'Moda', img: '/Feed/categoriaModa.png' },
+    { nome: 'Eletrônicos', img: '/Feed/categoriaEletronicos.png' },
+    { nome: 'Jogos', img: '/Feed/categoriaJogos.png' },
+    { nome: 'Brinquedos', img: '/Feed/categoriaBrinquedos.png' },
+    { nome: 'Casa', img: '/Feed/categoriaCasa.png' },
+  ];
 
-function mensagemErro(erro: unknown): string {
-  return erro instanceof Error ? erro.message : "Não foi possível concluir a operação.";
+  return (
+    <section className="bg-black pt-10 pb-12 pl-100"> 
+      <h2 className="text-white text-3xl font-bold mb-8">Categoria</h2>
+      
+      <div className="flex gap-6 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        
+        {categorias.map((cat, index) => (
+          <div 
+            key={index} 
+            className="flex-shrink-0 relative w-[120px] h-[120px] cursor-pointer hover:opacity-80 transition-opacity"
+          >
+            <Image 
+              src={cat.img} 
+              alt={cat.nome} 
+              fill
+              className="object-contain"
+            />
+          </div>
+        ))}
+        
+        <div className="flex-shrink-0 w-4"></div>
+      </div>
+    </section>
+  );
 }
 
-export default function LojasPage() {
-  const [lojas, setLojas] = useState<Loja[]>([]);
-  const [usuarioId, setUsuarioId] = useState<number | null>(() => readSession()?.userId ?? null);
-  const [carregando, setCarregando] = useState(true);
-  const [salvando, setSalvando] = useState(false);
-  const [erro, setErro] = useState("");
-  const [aviso, setAviso] = useState("");
-  const [formulario, setFormulario] = useState<FormState>(vazio);
-  const [editandoId, setEditandoId] = useState<number | null>(null);
-  const [reload, setReload] = useState(0);
+function BlocoLojas() {
+  const [filtrosAbertos, setFiltrosAbertos] = useState(false);
+  const [paginaAtual, setPaginaAtual] = useState(1);
+  const LOJAS_POR_PAGINA = 15;
 
-  const carregar = useCallback(() => {
-    setCarregando(true);
-    setReload((r) => r + 1);
-  }, []);
+  const categoriasFiltro = [
+    { nome: 'Mercado', icone: '/lojas/mercado.svg' },
+    { nome: 'Farmácia', icone: '/lojas/farmacia.svg' },
+    { nome: 'Beleza', icone: '/lojas/beleza.svg' },
+    { nome: 'Moda', icone: '/lojas/moda.svg' },
+    { nome: 'Eletrônicos', icone: '/lojas/eletronicos.svg' },
+    { nome: 'Jogos', icone: '/lojas/jogos.svg' },
+    { nome: 'Brinquedos', icone: '/lojas/brinquedos.svg' },
+    { nome: 'Casa', icone: '/lojas/casa.svg' },
+  ];
 
-  useEffect(() => {
-    let ativo = true;
+  // mock por enquanto, depois puxar da API
+  const lojas = [
+    { nome: 'CJR', categoria: 'mercado', img: '/stock-profile/logo-reference.svg' }, 
+    { nome: 'Maumar', categoria: 'mercado', img: '/stock-profile/logo-reference.svg' },
+    { nome: 'Mini Reno', categoria: 'casa', img: '/stock-profile/logo-reference.svg' },
+    { nome: 'Rare Beauty', categoria: 'beleza', img: '/stock-profile/rare-beauty-logo.svg' },
+    { nome: 'The Croc Brew', categoria: 'mercado', img: '/stock-profile/logo-reference.svg' },
+    { nome: 'Amoca', categoria: 'moda', img: '/stock-profile/logo-reference.svg' },
+    { nome: 'Rare Beauty', categoria: 'beleza', img: '/stock-profile/rare-beauty-logo.svg' },
+    { nome: 'Rare Beauty', categoria: 'beleza', img: '/stock-profile/rare-beauty-logo.svg' },
+    { nome: 'Rare Beauty', categoria: 'beleza', img: '/stock-profile/rare-beauty-logo.svg' },
+    { nome: 'Rare Beauty', categoria: 'beleza', img: '/stock-profile/rare-beauty-logo.svg' },
+    { nome: 'Rare Beauty', categoria: 'beleza', img: '/stock-profile/rare-beauty-logo.svg' },
+    { nome: 'Rare Beauty', categoria: 'beleza', img: '/stock-profile/rare-beauty-logo.svg' },
+    { nome: 'Rare Beauty', categoria: 'beleza', img: '/stock-profile/rare-beauty-logo.svg' },
+    { nome: 'Rare Beauty', categoria: 'beleza', img: '/stock-profile/rare-beauty-logo.svg' },
+    { nome: 'Rare Beauty', categoria: 'beleza', img: '/stock-profile/rare-beauty-logo.svg' },
+    { nome: 'Rare Beauty', categoria: 'beleza', img: '/stock-profile/rare-beauty-logo.svg' },
+    { nome: 'Rare Beauty', categoria: 'beleza', img: '/stock-profile/rare-beauty-logo.svg' },
+    { nome: 'Rare Beauty', categoria: 'beleza', img: '/stock-profile/rare-beauty-logo.svg' },
+    { nome: 'Rare Beauty', categoria: 'beleza', img: '/stock-profile/rare-beauty-logo.svg' },
 
-    lojasApi
-      .listar()
-      .then((data) => {
-        if (ativo) {
-          setLojas(data);
-          setErro("");
-        }
-      })
-      .catch((e: unknown) => {
-        if (ativo) {
-          setErro(mensagemErro(e));
-        }
-      })
-      .finally(() => {
-        if (ativo) {
-          setCarregando(false);
-        }
-      });
+  ];
 
-    const atualizarSessao = () => setUsuarioId(readSession()?.userId ?? null);
-    window.addEventListener(SESSION_CHANGED, atualizarSessao);
-    window.addEventListener("storage", atualizarSessao);
+  const totalPaginas = Math.max(1, Math.ceil(lojas.length / LOJAS_POR_PAGINA));
+  const indiceInicial = (paginaAtual - 1) * LOJAS_POR_PAGINA;
+  const lojasExibidas = lojas.slice(indiceInicial, indiceInicial + LOJAS_POR_PAGINA);
 
-    return () => {
-      ativo = false;
-      window.removeEventListener(SESSION_CHANGED, atualizarSessao);
-      window.removeEventListener("storage", atualizarSessao);
-    };
-  }, [reload]);
-
-  function cancelar() {
-    setEditandoId(null);
-    setFormulario(vazio);
-  }
-
-  async function salvar(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setErro("");
-    setAviso("");
-    const nome = formulario.nome.trim();
-    const descricao = formulario.descricao.trim();
-    if (!nome) {
-      setErro("Informe o nome da loja.");
-      return;
-    }
-    setSalvando(true);
-    try {
-      if (editandoId === null) {
-        await lojasApi.criar({ nome, descricao });
-        setAviso("Loja cadastrada com sucesso.");
-      } else {
-        await lojasApi.atualizar(editandoId, { nome, descricao });
-        setAviso("Loja atualizada com sucesso.");
-      }
-      cancelar();
-      carregar();
-    } catch (e) {
-      setErro(mensagemErro(e));
-    } finally {
-      setSalvando(false);
-    }
-  }
-
-  function editar(loja: Loja) {
-    setEditandoId(loja.id);
-    setFormulario({ nome: loja.nome, descricao: loja.descricao ?? "" });
-    setErro("");
-    setAviso("");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  async function excluir(loja: Loja) {
-    if (!window.confirm(`Excluir a loja "${loja.nome}"? Produtos associados podem ser apagados pelo banco.`)) return;
-    setErro("");
-    setAviso("");
-    setSalvando(true);
-    try {
-      await lojasApi.excluir(loja.id);
-      if (editandoId === loja.id) cancelar();
-      setAviso("Loja excluída.");
-      carregar();
-    } catch (e) {
-      setErro(mensagemErro(e));
-    } finally {
-      setSalvando(false);
+  function irParaPagina(novaPagina: number) {
+    if (novaPagina >= 1 && novaPagina <= totalPaginas) {
+      setPaginaAtual(novaPagina);
     }
   }
 
   return (
-    <main className="min-h-screen bg-[#F6F3E4] px-5 py-10 text-[#171918]">
-      <div className="mx-auto max-w-5xl space-y-8">
-        <header className="space-y-2">
-          <Link href="/" className="text-sm font-semibold text-[#6A38F3] hover:underline">Voltar ao início</Link>
-          <h1 className="text-4xl font-extrabold">Lojas</h1>
-          <p className="text-gray-600">Consulte lojas cadastradas e gerencie as suas.</p>
-        </header>
+    <main className="bg-[#F6F3E4] min-h-screen px-16 py-16">
+      <section className="space-y-6 items-start mb-16">
 
-        {erro && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">{erro}</div>}
-        {aviso && <div role="status" className="rounded-xl border border-green-200 bg-green-50 p-4 text-green-800">{aviso}</div>}
-
-        {usuarioId !== null ? (
-          <section className="rounded-3xl bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-xl font-bold">{editandoId === null ? "Cadastrar loja" : "Editar loja"}</h2>
-            <form onSubmit={salvar} className="space-y-4">
-              <div>
-                <label htmlFor="nome" className="mb-1 block font-medium">Nome</label>
-                <input id="nome" required maxLength={255} value={formulario.nome} onChange={(e) => setFormulario((prev) => ({ ...prev, nome: e.target.value }))} className="w-full rounded-xl border border-gray-300 p-3 focus:outline-[#6A38F3]" placeholder="Nome da loja" />
-              </div>
-              <div>
-                <label htmlFor="descricao" className="mb-1 block font-medium">Descrição</label>
-                <textarea id="descricao" rows={3} value={formulario.descricao} onChange={(e) => setFormulario((prev) => ({ ...prev, descricao: e.target.value }))} className="w-full rounded-xl border border-gray-300 p-3 focus:outline-[#6A38F3]" placeholder="O que sua loja oferece?" />
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <button disabled={salvando} type="submit" className="rounded-xl bg-[#6A38F3] px-6 py-3 font-semibold text-white disabled:opacity-50">{salvando ? "Salvando..." : editandoId === null ? "Cadastrar" : "Salvar alterações"}</button>
-                {editandoId !== null && <button type="button" onClick={cancelar} className="rounded-xl border border-gray-300 px-6 py-3">Cancelar</button>}
-              </div>
-            </form>
-          </section>
-        ) : (
-          <div className="rounded-2xl bg-white p-5">Para criar ou gerenciar suas lojas, <Link className="font-semibold text-[#6A38F3] underline" href="/login">entre na sua conta</Link>.</div>
-        )}
-
-        <section>
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <h2 className="text-2xl font-bold">Lojas cadastradas</h2>
-            <button type="button" disabled={carregando} onClick={carregar} className="rounded-xl border border-[#6A38F3] px-4 py-2 text-sm font-semibold text-[#6A38F3] disabled:opacity-50">Atualizar</button>
+        <div className="ml-auto flex relative w-[700px]">
+          <input 
+            type="text" 
+            placeholder="Procurar por..." 
+            className="w-full rounded-full py-3 px-6 shadow-sm text-sm text-gray-500 bg-white outline-none border border-transparent focus:border-purple-300"
+          />
+          
+          <div className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 flex-shrink-0 pointer-events-none">
+            <Image 
+              src="/lojas/lupa.svg" 
+              alt="Buscar" 
+              fill
+              className="object-contain"
+            />
           </div>
-          {carregando ? <p role="status">Carregando lojas...</p> : lojas.length === 0 ? <p>Nenhuma loja encontrada.</p> : (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {lojas.map((loja) => (
-                <article key={loja.id} className="rounded-3xl bg-white p-6 shadow-sm">
-                  <h3 className="text-xl font-bold">{loja.nome}</h3>
-                  <p className="mt-2 whitespace-pre-wrap text-gray-600">{loja.descricao || "Sem descrição."}</p>
-                  {usuarioId !== null && Number(loja.usuarioId) === usuarioId && (
-                    <div className="mt-5 flex gap-2">
-                      <button disabled={salvando} type="button" onClick={() => editar(loja)} className="rounded-lg border border-[#6A38F3] px-4 py-2 text-sm font-medium text-[#6A38F3] disabled:opacity-50">Editar</button>
-                      <button disabled={salvando} type="button" onClick={() => void excluir(loja)} className="rounded-lg border border-red-500 px-4 py-2 text-sm font-medium text-red-600 disabled:opacity-50">Excluir</button>
-                    </div>
-                  )}
-                </article>
-              ))}
+        </div>
+
+        <div className="flex justify-between items-center">
+          <h2 className="text-[40px] font-medium text-black">Lojas</h2>
+          
+          <div className="relative font-light w-[467px]">
+            <button 
+              onClick={() => setFiltrosAbertos(true)}
+              className="w-full flex justify-between items-center rounded-full py-3 px-6 shadow-sm bg-white text-lg text-[#6A38F3] outline-none"
+            >
+              <span>filtros</span>
+              <span className="text-sm">v</span>
+            </button>
+
+            {filtrosAbertos && (
+              <div className="absolute top-0 left-0 w-full bg-white rounded-[32px] p-6 shadow-xl z-50">
+                <div 
+                  className="flex justify-between items-center mb-6 cursor-pointer text-[#6A38F3]"
+                  onClick={() => setFiltrosAbertos(false)}
+                >
+                  <span className="text-2xl font-light">filtros</span>
+                  <span className="text-xl">^</span>
+                </div>
+
+                <div className="flex flex-col gap-4">
+                  {categoriasFiltro.map((cat, index) => (
+                    <label key={index} className="flex items-center gap-6 cursor-pointer group">
+                      <input 
+                        type="checkbox" 
+                        className="appearance-none w-6 h-6 border-[1.5px] border-[#6A38F3] rounded-[8px] checked:bg-[#6A38F3] cursor-pointer transition-colors flex-shrink-0"
+                      />
+                      <div className="flex items-center gap-2">
+                        <span className="text-[#6A38F3] font-light text-lg">{cat.nome}</span>
+                        <div className="relative w-5 h-5 flex-shrink-0">
+                          <Image src={cat.icone} alt={`Ícone de ${cat.nome}`} fill className="object-contain" />
+                        </div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-y-20 max-w-[1200px] mx-auto mb-20">
+        {lojasExibidas.map((loja, index) => (
+          <div key={index} className="flex flex-col items-center cursor-pointer group">
+            <div className="relative w-[135px] h-[135px] rounded-full overflow-hidden bg-white shadow-md mb-4 transition-transform group-hover:scale-105">
+              <Image src={loja.img} alt={loja.nome} fill className="object-cover" />
             </div>
-          )}
+            <h3 className="text-xl font-medium text-black">{loja.nome}</h3>
+            <p className="text-lg text-[#6A38F3]">{loja.categoria}</p>
+          </div>
+        ))}
+      </section>
+
+      {totalPaginas > 1 && (
+        <section className="flex justify-center items-center gap-6 text-2xl font-light text-black">
+          
+          <button 
+            onClick={() => irParaPagina(paginaAtual - 1)}
+            disabled={paginaAtual === 1}
+            className="hover:text-[#6A38F3] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            &lt;
+          </button>
+          
+          {Array.from({ length: totalPaginas }).map((_, index) => {
+            const numeroDaPagina = index + 1;
+            return (
+              <button 
+                key={numeroDaPagina}
+                onClick={() => irParaPagina(numeroDaPagina)}
+                className={`hover:text-[#6A38F3] transition-colors ${paginaAtual === numeroDaPagina ? 'font-bold text-3xl' : ''}`}
+              >
+                {numeroDaPagina}
+              </button>
+            )
+          })}
+          
+          <button 
+            onClick={() => irParaPagina(paginaAtual + 1)}
+            disabled={paginaAtual === totalPaginas}
+            className="hover:text-[#6A38F3] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            &gt;
+          </button>
+          
         </section>
-      </div>
+      )}
+
     </main>
   );
+}
+
+export default function LojasPage() {
+  return (
+    <>
+      
+      <SecaoCategorias />
+      <BlocoLojas />
+    </>
+  )
+
 }
