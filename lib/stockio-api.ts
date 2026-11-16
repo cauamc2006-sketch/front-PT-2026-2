@@ -1,5 +1,5 @@
-/** Cliente HTTP para os endpoints existentes do NestJS. */
-const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001").replace(/\/+$/, "");
+import { API_URL } from "./config";
+import { readSession } from "./session";
 
 export type Loja = { id: number; nome: string; descricao?: string | null; logoUrl?: string | null; usuarioId: number };
 export type Comentario = { id: number; conteudo: string; usuarioId: number; avaliacaoLojaId?: number | null; avaliacaoProdutoId?: number | null };
@@ -9,7 +9,8 @@ export class StockioApiError extends Error {
 }
 
 async function request<T>(path: string, init: RequestInit = {}, authenticated = false): Promise<T> {
-  const token = typeof window !== "undefined" ? window.localStorage.getItem("token") : null;
+  const session = readSession();
+  const token = session?.token ?? (typeof window !== "undefined" ? window.localStorage.getItem("token") : null);
   if (authenticated && !token) throw new StockioApiError("Faça login para continuar.", 401);
   let response: Response;
   try {
@@ -57,3 +58,5 @@ export { getProducts, parseProducts, formatPrice, type Product };
 export const produtosApi = {
   listar: (signal?: AbortSignal) => getProducts(signal),
 };
+
+export * as userApi from "./profile-api";

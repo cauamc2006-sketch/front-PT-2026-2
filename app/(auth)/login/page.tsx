@@ -3,10 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-
-const apiUrl = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
-).replace(/\/+$/, "");
+import { API_URL } from "@/lib/config";
+import { saveSession } from "@/lib/session";
 
 const field =
   "h-14 w-full rounded-full bg-cream px-6 text-base text-ink placeholder:text-ink/50 outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-ink";
@@ -60,7 +58,7 @@ function LoginForm() {
     try {
       let response: Response;
       try {
-        response = await fetch(`${apiUrl}/auth/login`, {
+        response = await fetch(`${API_URL}/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, senha: password }),
@@ -100,12 +98,7 @@ function LoginForm() {
         return;
       }
 
-      try {
-        localStorage.setItem("token", result.token);
-      } catch {
-        setError("Não foi possível salvar sua sessão neste navegador.");
-        return;
-      }
+      saveSession(result.token);
 
       router.replace("/");
     } finally {

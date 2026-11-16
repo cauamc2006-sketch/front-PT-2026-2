@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { comentariosApi, type Comentario } from "@/lib/stockio-api";
-import { readSession, SESSION_CHANGED } from "@/app/stock-profile/session";
+import { readSession, SESSION_CHANGED } from "@/lib/session";
 
 type TipoAvaliacao = "produto" | "loja";
 

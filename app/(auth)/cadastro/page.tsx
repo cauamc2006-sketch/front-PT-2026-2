@@ -4,10 +4,7 @@ import React, { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-
-const apiUrl = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
-).replace(/\/+$/, "")
+import { API_URL } from "@/lib/config"
 
 const inputClass =
   "bg-[#F6F3E4] rounded-[72px] w-full px-6 py-4 outline-none focus:ring-2 focus:ring-[#7C3AED] font-light text-[25px] leading-none tracking-normal text-[#858585] placeholder-[#858585]"
@@ -51,7 +48,7 @@ export default function Cadastro() {
     try {
       let response: Response
       try {
-        response = await fetch(`${apiUrl}/user`, {
+        response = await fetch(`${API_URL}/user`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

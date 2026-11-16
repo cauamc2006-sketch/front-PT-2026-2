@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import React, { useSyncExternalStore } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { clearSession, readSession, SESSION_CHANGED } from '../stock-profile/session';
+import { clearSession, readSession, SESSION_CHANGED } from '@/lib/session';
 
 function subscribeSession(listener: () => void) {
   window.addEventListener('storage', listener);
