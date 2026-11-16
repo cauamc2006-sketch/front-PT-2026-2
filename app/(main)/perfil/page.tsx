@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ProfileScreen } from "../../stock-profile/ProfileScreen";
-import { ProfileApiError, changePassword, deleteAccount, loadProfile, saveProfile } from "../../stock-profile/profile-api";
-import { clearSession, readSession, SESSION_CHANGED } from "../../stock-profile/session";
-import type { Profile, ProfileActions } from "../../stock-profile/types";
-import styles from "../../stock-profile/profile.module.css";
+import { ProfileScreen } from "@/app/components/profile";
+import type { Profile, ProfileActions } from "@/app/components/profile";
+import styles from "@/app/components/profile/profile.module.css";
+import { ProfileApiError, changePassword, deleteAccount, loadProfile, saveProfile } from "@/lib/profile-api";
+import { clearSession, readSession, SESSION_CHANGED } from "@/lib/session";
 
 type State = { kind: "loading" } | { kind: "signed-out" } | { kind: "error"; message: string } | { kind: "ready"; profile: Profile };
 

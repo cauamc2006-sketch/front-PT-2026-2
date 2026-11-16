@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ProfilePreview } from "../../../../stock-profile/ProfilePreview";
+import { ProfilePreview } from "@/app/components/profile";
 
 export const metadata: Metadata = { title: "Prévia do perfil deslogado | STOCK.IO" };
 

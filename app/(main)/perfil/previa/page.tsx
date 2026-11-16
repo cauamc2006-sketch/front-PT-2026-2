@@ -1,4 +1,4 @@
-import { ProfilePreview } from "../../../stock-profile/ProfilePreview";
+import { ProfilePreview } from "@/app/components/profile";
 
 export default function ProfilePreviewPage() {
   return <ProfilePreview />;

@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from "react";
 import { Icon } from "./Icons";
 import { Avatar, ProfileModals } from "./ProfileModals";
-import CardProduto from "../components/CardProduto";
+import CardProduto from "../CardProduto";
 import type { Product, Profile, ProfileActions } from "./types";
 import styles from "./profile.module.css";
 
