@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import ProductImageCard from "@/components/ProductImageCard";
+import ProductImageCard from "@/app/components/ProductImageCard";
 import { formatPrice, getProducts, type Product } from "@/lib/products";
 
 export default function ProdutosPage() {

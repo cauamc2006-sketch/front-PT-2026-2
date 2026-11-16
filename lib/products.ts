@@ -1,4 +1,5 @@
-import type { ProductImage } from "@/components/ProductImageCard";
+import type { ProductImage } from "@/app/components/ProductImageCard";
+import { API_URL } from "./config";
 
 export type Product = {
   id: number;
@@ -10,21 +11,6 @@ export type Product = {
   imagens?: ProductImage[];
   loja?: { nome?: string; logoUrl?: string } | null;
 };
-
-/** Formato já usado pelo ProductCard da branch feat/perfil. */
-export type ProfileCardProduct = {
-  id: string;
-  name: string;
-  price: number;
-  imageUrl?: string;
-  imageAlt?: string;
-  href?: string;
-  storeLogoUrl?: string;
-  storeName?: string;
-  available?: boolean;
-};
-
-const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001").replace(/\/+$/, "");
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -91,22 +77,6 @@ export async function getProducts(signal?: AbortSignal): Promise<Product[]> {
   try { data = await response.json(); }
   catch { throw new Error("O backend não retornou um JSON válido."); }
   return parseProducts(data);
-}
-
-/** Adaptador para aproveitar o card existente na branch feat/perfil, sem duplicar seu código. */
-export function toProfileCardProduct(product: Product): ProfileCardProduct {
-  const firstImage = [...(product.imagens ?? [])].sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0))[0];
-  return {
-    id: String(product.id),
-    name: product.nome,
-    price: Number(product.preco),
-    imageUrl: firstImage?.urlImagem,
-    imageAlt: `Imagem de ${product.nome}`,
-    href: `/produtos/${product.id}`,
-    storeName: product.loja?.nome,
-    storeLogoUrl: product.loja?.logoUrl,
-    available: product.ativo !== false && product.estoque > 0,
-  };
 }
 
 export function formatPrice(value: Product["preco"]): string {
