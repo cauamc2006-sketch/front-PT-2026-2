@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
+import { lojasApi, type Loja } from "@/lib/stockio-api";
 
 function SecaoCategorias() {
   const categorias = [
@@ -42,6 +43,10 @@ function SecaoCategorias() {
 }
 
 function BlocoLojas() {
+  const [lojas, setLojas] = useState<Loja[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
+  const [busca, setBusca] = useState("");
   const [filtrosAbertos, setFiltrosAbertos] = useState(false);
   const [paginaAtual, setPaginaAtual] = useState(1);
   const LOJAS_POR_PAGINA = 15;
@@ -57,33 +62,36 @@ function BlocoLojas() {
     { nome: 'Casa', icone: '/lojas/casa.svg' },
   ];
 
-  // mock por enquanto, depois puxar da API
-  const lojas = [
-    { nome: 'CJR', categoria: 'mercado', img: '/stock-profile/logo-reference.svg' }, 
-    { nome: 'Maumar', categoria: 'mercado', img: '/stock-profile/logo-reference.svg' },
-    { nome: 'Mini Reno', categoria: 'casa', img: '/stock-profile/logo-reference.svg' },
-    { nome: 'Rare Beauty', categoria: 'beleza', img: '/stock-profile/rare-beauty-logo.svg' },
-    { nome: 'The Croc Brew', categoria: 'mercado', img: '/stock-profile/logo-reference.svg' },
-    { nome: 'Amoca', categoria: 'moda', img: '/stock-profile/logo-reference.svg' },
-    { nome: 'Rare Beauty', categoria: 'beleza', img: '/stock-profile/rare-beauty-logo.svg' },
-    { nome: 'Rare Beauty', categoria: 'beleza', img: '/stock-profile/rare-beauty-logo.svg' },
-    { nome: 'Rare Beauty', categoria: 'beleza', img: '/stock-profile/rare-beauty-logo.svg' },
-    { nome: 'Rare Beauty', categoria: 'beleza', img: '/stock-profile/rare-beauty-logo.svg' },
-    { nome: 'Rare Beauty', categoria: 'beleza', img: '/stock-profile/rare-beauty-logo.svg' },
-    { nome: 'Rare Beauty', categoria: 'beleza', img: '/stock-profile/rare-beauty-logo.svg' },
-    { nome: 'Rare Beauty', categoria: 'beleza', img: '/stock-profile/rare-beauty-logo.svg' },
-    { nome: 'Rare Beauty', categoria: 'beleza', img: '/stock-profile/rare-beauty-logo.svg' },
-    { nome: 'Rare Beauty', categoria: 'beleza', img: '/stock-profile/rare-beauty-logo.svg' },
-    { nome: 'Rare Beauty', categoria: 'beleza', img: '/stock-profile/rare-beauty-logo.svg' },
-    { nome: 'Rare Beauty', categoria: 'beleza', img: '/stock-profile/rare-beauty-logo.svg' },
-    { nome: 'Rare Beauty', categoria: 'beleza', img: '/stock-profile/rare-beauty-logo.svg' },
-    { nome: 'Rare Beauty', categoria: 'beleza', img: '/stock-profile/rare-beauty-logo.svg' },
+  useEffect(() => {
+    let ativo = true;
 
-  ];
+    lojasApi
+      .listar()
+      .then((data) => {
+        if (ativo) {
+          setLojas(data);
+          setCarregando(false);
+        }
+      })
+      .catch((e: unknown) => {
+        if (ativo) {
+          setErro(e instanceof Error ? e.message : "Não foi possível carregar as lojas.");
+          setCarregando(false);
+        }
+      });
 
-  const totalPaginas = Math.max(1, Math.ceil(lojas.length / LOJAS_POR_PAGINA));
+    return () => {
+      ativo = false;
+    };
+  }, []);
+
+  const lojasFiltradas = lojas.filter((loja) =>
+    loja.nome.toLowerCase().includes(busca.trim().toLowerCase())
+  );
+
+  const totalPaginas = Math.max(1, Math.ceil(lojasFiltradas.length / LOJAS_POR_PAGINA));
   const indiceInicial = (paginaAtual - 1) * LOJAS_POR_PAGINA;
-  const lojasExibidas = lojas.slice(indiceInicial, indiceInicial + LOJAS_POR_PAGINA);
+  const lojasExibidas = lojasFiltradas.slice(indiceInicial, indiceInicial + LOJAS_POR_PAGINA);
 
   function irParaPagina(novaPagina: number) {
     if (novaPagina >= 1 && novaPagina <= totalPaginas) {
@@ -99,6 +107,11 @@ function BlocoLojas() {
           <input 
             type="text" 
             placeholder="Procurar por..." 
+            value={busca}
+            onChange={(e) => {
+              setBusca(e.target.value);
+              setPaginaAtual(1);
+            }}
             className="w-full rounded-full py-3 px-6 shadow-sm text-sm text-gray-500 bg-white outline-none border border-transparent focus:border-purple-300"
           />
           
@@ -156,17 +169,33 @@ function BlocoLojas() {
         </div>
       </section>
 
-      <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-y-20 max-w-[1200px] mx-auto mb-20">
-        {lojasExibidas.map((loja, index) => (
-          <div key={index} className="flex flex-col items-center cursor-pointer group">
-            <div className="relative w-[135px] h-[135px] rounded-full overflow-hidden bg-white shadow-md mb-4 transition-transform group-hover:scale-105">
-              <Image src={loja.img} alt={loja.nome} fill className="object-cover" />
+      {carregando ? (
+        <p role="status" className="text-center text-lg text-gray-600">Carregando lojas...</p>
+      ) : erro ? (
+        <div role="alert" className="text-center bg-white p-6 rounded-3xl max-w-md mx-auto shadow-sm">
+          <p className="text-red-600 mb-2">{erro}</p>
+        </div>
+      ) : lojasFiltradas.length === 0 ? (
+        <p className="text-center text-lg text-gray-500 my-12">Nenhuma loja encontrada.</p>
+      ) : (
+        <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-y-20 max-w-[1200px] mx-auto mb-20">
+          {lojasExibidas.map((loja) => (
+            <div key={loja.id} className="flex flex-col items-center cursor-pointer group">
+              <div className="relative w-[135px] h-[135px] rounded-full overflow-hidden bg-white shadow-md mb-4 transition-transform group-hover:scale-105">
+                <Image 
+                  src={loja.logoUrl && loja.logoUrl.trim() ? loja.logoUrl : "/stock-profile/logo-reference.svg"} 
+                  alt={loja.nome} 
+                  fill 
+                  className="object-cover" 
+                  unoptimized
+                />
+              </div>
+              <h3 className="text-xl font-medium text-black text-center">{loja.nome}</h3>
+              <p className="text-sm text-[#6A38F3] text-center max-w-[180px] truncate">{loja.descricao || "Loja parceira"}</p>
             </div>
-            <h3 className="text-xl font-medium text-black">{loja.nome}</h3>
-            <p className="text-lg text-[#6A38F3]">{loja.categoria}</p>
-          </div>
-        ))}
-      </section>
+          ))}
+        </section>
+      )}
 
       {totalPaginas > 1 && (
         <section className="flex justify-center items-center gap-6 text-2xl font-light text-black">
