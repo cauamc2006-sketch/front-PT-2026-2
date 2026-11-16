@@ -50,3 +50,10 @@ export const comentariosApi = {
   atualizar: (id: number, conteudo: string) => request<Comentario>(`/comentarios/${id}`, { method: "PATCH", body: json({ conteudo }) }, true),
   excluir: (id: number) => request<Comentario>(`/comentarios/${id}`, { method: "DELETE" }, true),
 };
+
+import { getProducts, parseProducts, formatPrice, type Product } from "./products";
+export { getProducts, parseProducts, formatPrice, type Product };
+
+export const produtosApi = {
+  listar: (signal?: AbortSignal) => getProducts(signal),
+};

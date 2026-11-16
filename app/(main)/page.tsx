@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import CardCategoria from "../components/CardCategoria";
+import CardProduto from "../components/CardProduto";
 import { getProducts, formatPrice, type Product } from "@/lib/products";
 
 const categories = [
@@ -76,18 +77,22 @@ export default function Feed() {
             </div>
           ) : filtered.length === 0 ? <p>Nenhum produto encontrado.</p> : (
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-              {filtered.slice(0, 15).map((p) => (
-                <article key={p.id} className="bg-white rounded-3xl p-4 shadow-sm">
-                  <div className="h-36 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 text-sm overflow-hidden">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    {p.imagens?.[0]?.urlImagem ? <img src={p.imagens[0].urlImagem} alt={p.nome} className="h-full w-full object-contain" /> : <span>Sem imagem</span>}
-                  </div>
-                  <h3 className="font-semibold text-gray-800 mt-3 truncate">{p.nome}</h3>
-                  <p className="font-bold">{formatPrice(p.preco)}</p>
-                  <p className="text-xs text-gray-500">{p.loja?.nome ?? "Loja não informada"}</p>
-                  <p className="text-xs mt-1">{p.estoque > 0 ? "Disponível" : "Sem estoque"}</p>
-                </article>
-              ))}
+              {filtered.slice(0, 15).map((p) => {
+                const firstImage = [...(p.imagens ?? [])].sort(
+                  (a, b) => (a.ordem ?? 0) - (b.ordem ?? 0)
+                )[0]?.urlImagem;
+
+                return (
+                  <CardProduto
+                    key={p.id}
+                    imagemUrl={firstImage}
+                    nome={p.nome}
+                    preco={formatPrice(p.preco)}
+                    lojaLogo={p.loja?.logoUrl}
+                    disponivel={p.ativo !== false && p.estoque > 0}
+                  />
+                );
+              })}
             </div>
           )}
         </section>

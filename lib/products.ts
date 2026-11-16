@@ -34,8 +34,9 @@ function parseImages(value: unknown): ProductImage[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((entry) => {
     if (!isRecord(entry)) return [];
-    const url = entry.urlImagem;
-    if (typeof url !== "string" || !url.trim()) return [];
+    const rawUrl = typeof entry.urlImagem === "string" ? entry.urlImagem : typeof entry.url === "string" ? entry.url : "";
+    const url = rawUrl.trim();
+    if (!url) return [];
     return [{
       urlImagem: url,
       ...(typeof entry.id === "number" ? { id: entry.id } : {}),
@@ -44,10 +45,10 @@ function parseImages(value: unknown): ProductImage[] {
   });
 }
 
-/** Valida a resposta antes de renderizar: a branch do CRUD ainda retorna strings de exemplo. */
+/** Valida e normaliza a resposta da API GET /produto. */
 export function parseProducts(payload: unknown): Product[] {
   if (!Array.isArray(payload)) {
-    throw new Error("A API de produtos ainda não devolve uma lista. O CRUD precisa ser concluído no backend.");
+    throw new Error("A API de produtos não retornou uma lista válida.");
   }
   return payload.map((entry, index) => {
     if (!isRecord(entry) || typeof entry.id !== "number" || typeof entry.nome !== "string" ||
