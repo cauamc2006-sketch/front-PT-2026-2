@@ -6,13 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import CardCategoria from "../components/CardCategoria";
 import CardProduto from "../components/CardProduto";
 import { getProducts, formatPrice, type Product } from "@/lib/products";
-
-const categories = [
-  ["Mercado", "categoriaMercado.png"], ["Farmácia", "categoriaFarmacia.png"],
-  ["Beleza", "categoriaBeleza.png"], ["Moda", "categoriaModa.png"],
-  ["Eletrônicos", "categoriaEletronicos.png"], ["Jogos", "categoriaJogos.png"],
-  ["Brinquedos", "categoriaBrinquedos.png"], ["Casa", "categoriaCasa.png"],
-] as const;
+import { CATEGORIAS } from "@/lib/constants";
 
 export default function Feed() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -63,7 +57,7 @@ export default function Feed() {
         <section className="mb-12">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Categorias</h2>
           <div className="flex gap-6 overflow-x-auto pb-4">
-            {categories.map(([nome, imagem]) => <CardCategoria key={nome} icone={`/Feed/${imagem}`} nome={nome} />)}
+            {CATEGORIAS.map((cat) => <CardCategoria key={cat.nome} icone={cat.imagem} nome={cat.nome} />)}
           </div>
         </section>
         <section>

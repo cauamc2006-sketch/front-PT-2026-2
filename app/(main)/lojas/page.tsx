@@ -3,32 +3,21 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { lojasApi, type Loja } from "@/lib/stockio-api";
+import { CATEGORIAS } from "@/lib/constants";
 
 function SecaoCategorias() {
-  const categorias = [
-    { nome: 'Mercado', img: '/Feed/categoriaMercado.png' },
-    { nome: 'Farmácia', img: '/Feed/categoriaFarmacia.png' },
-    { nome: 'Beleza', img: '/Feed/categoriaBeleza.png' },
-    { nome: 'Moda', img: '/Feed/categoriaModa.png' },
-    { nome: 'Eletrônicos', img: '/Feed/categoriaEletronicos.png' },
-    { nome: 'Jogos', img: '/Feed/categoriaJogos.png' },
-    { nome: 'Brinquedos', img: '/Feed/categoriaBrinquedos.png' },
-    { nome: 'Casa', img: '/Feed/categoriaCasa.png' },
-  ];
-
   return (
-    <section className="bg-black pt-10 pb-12 pl-100"> 
+    <section className="bg-black pt-10 pb-12 px-10 md:px-16"> 
       <h2 className="text-white text-3xl font-bold mb-8">Categoria</h2>
       
       <div className="flex gap-6 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        
-        {categorias.map((cat, index) => (
+        {CATEGORIAS.map((cat) => (
           <div 
-            key={index} 
+            key={cat.nome} 
             className="flex-shrink-0 relative w-[120px] h-[120px] cursor-pointer hover:opacity-80 transition-opacity"
           >
             <Image 
-              src={cat.img} 
+              src={cat.imagem} 
               alt={cat.nome} 
               fill
               className="object-contain"
@@ -50,17 +39,6 @@ function BlocoLojas() {
   const [filtrosAbertos, setFiltrosAbertos] = useState(false);
   const [paginaAtual, setPaginaAtual] = useState(1);
   const LOJAS_POR_PAGINA = 15;
-
-  const categoriasFiltro = [
-    { nome: 'Mercado', icone: '/lojas/mercado.svg' },
-    { nome: 'Farmácia', icone: '/lojas/farmacia.svg' },
-    { nome: 'Beleza', icone: '/lojas/beleza.svg' },
-    { nome: 'Moda', icone: '/lojas/moda.svg' },
-    { nome: 'Eletrônicos', icone: '/lojas/eletronicos.svg' },
-    { nome: 'Jogos', icone: '/lojas/jogos.svg' },
-    { nome: 'Brinquedos', icone: '/lojas/brinquedos.svg' },
-    { nome: 'Casa', icone: '/lojas/casa.svg' },
-  ];
 
   useEffect(() => {
     let ativo = true;
@@ -148,8 +126,8 @@ function BlocoLojas() {
                 </div>
 
                 <div className="flex flex-col gap-4">
-                  {categoriasFiltro.map((cat, index) => (
-                    <label key={index} className="flex items-center gap-6 cursor-pointer group">
+                  {CATEGORIAS.map((cat) => (
+                    <label key={cat.nome} className="flex items-center gap-6 cursor-pointer group">
                       <input 
                         type="checkbox" 
                         className="appearance-none w-6 h-6 border-[1.5px] border-[#6A38F3] rounded-[8px] checked:bg-[#6A38F3] cursor-pointer transition-colors flex-shrink-0"
