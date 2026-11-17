@@ -2,15 +2,16 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { lojasApi, type Loja } from "@/lib/stockio-api";
 import { CATEGORIAS } from "@/lib/constants";
 
 function SecaoCategorias() {
   return (
-    <section className="bg-black pt-10 pb-12 px-10 md:px-16"> 
+    <section className="bg-black pt-10 pb-12 pl-[150px]"> 
       <h2 className="text-white text-3xl font-bold mb-8">Categoria</h2>
       
-      <div className="flex gap-6 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <div className="flex gap-20 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {CATEGORIAS.map((cat) => (
           <div 
             key={cat.nome} 
@@ -158,7 +159,11 @@ function BlocoLojas() {
       ) : (
         <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-y-20 max-w-[1200px] mx-auto mb-20">
           {lojasExibidas.map((loja) => (
-            <div key={loja.id} className="flex flex-col items-center cursor-pointer group">
+            <Link
+              key={loja.id}
+              href={`/lojas/${loja.id}`}
+              className="flex flex-col items-center cursor-pointer group"
+            >
               <div className="relative w-[135px] h-[135px] rounded-full overflow-hidden bg-white shadow-md mb-4 transition-transform group-hover:scale-105">
                 <Image 
                   src={loja.logoUrl && loja.logoUrl.trim() ? loja.logoUrl : "/stock-profile/logo-reference.svg"} 
@@ -170,7 +175,7 @@ function BlocoLojas() {
               </div>
               <h3 className="text-xl font-medium text-black text-center">{loja.nome}</h3>
               <p className="text-sm text-[#6A38F3] text-center max-w-[180px] truncate">{loja.descricao || "Loja parceira"}</p>
-            </div>
+            </Link>
           ))}
         </section>
       )}

@@ -1,8 +1,31 @@
 import { API_URL } from "./config";
 import { readSession } from "./session";
 
-export type Loja = { id: number; nome: string; descricao?: string | null; logoUrl?: string | null; usuarioId: number };
+export type Loja = {
+  id: number;
+  nome: string;
+  descricao?: string | null;
+  logoUrl?: string | null;
+  bannerUrl?: string | null;
+  usuarioId: number;
+  usuario?: { id: number; nome?: string | null; username?: string | null; fotoPerfilUrl?: string | null } | null;
+};
 export type Comentario = { id: number; conteudo: string; usuarioId: number; avaliacaoLojaId?: number | null; avaliacaoProdutoId?: number | null };
+export type AvaliacaoLoja = {
+  id: number;
+  usuarioId: number;
+  lojaId: number;
+  nota: number;
+  comentario?: string | null;
+  usuario?: { id: number; nome?: string | null; username?: string | null; fotoPerfilUrl?: string | null } | null;
+};
+export type AvaliacaoProduto = {
+  id: number;
+  usuarioId: number;
+  produtoId: number;
+  nota: number;
+  comentario?: string | null;
+};
 
 export class StockioApiError extends Error {
   constructor(message: string, readonly status: number) { super(message); this.name = "StockioApiError"; }
@@ -55,8 +78,26 @@ export const comentariosApi = {
 import { getProducts, parseProducts, formatPrice, type Product } from "./products";
 export { getProducts, parseProducts, formatPrice, type Product };
 
+export const avaliacoesLojaApi = {
+  listar: (filtro?: { lojaId?: number; usuarioId?: number }) => {
+    const params = new URLSearchParams();
+    if (filtro?.lojaId) params.set("lojaId", String(filtro.lojaId));
+    if (filtro?.usuarioId) params.set("usuarioId", String(filtro.usuarioId));
+    return request<AvaliacaoLoja[]>(`/avaliacao-loja${params.size ? `?${params}` : ""}`);
+  },
+};
+
+export const avaliacoesProdutoApi = {
+  listar: (filtro?: { produtoId?: number; usuarioId?: number }) => {
+    const params = new URLSearchParams();
+    if (filtro?.produtoId) params.set("produtoId", String(filtro.produtoId));
+    if (filtro?.usuarioId) params.set("usuarioId", String(filtro.usuarioId));
+    return request<AvaliacaoProduto[]>(`/avaliacao-produto${params.size ? `?${params}` : ""}`);
+  },
+};
+
 export const produtosApi = {
-  listar: (signal?: AbortSignal) => getProducts(signal),
+  listar: (signal?: AbortSignal, lojaId?: number) => getProducts(signal, lojaId),
 };
 
 export * as userApi from "./profile-api";
