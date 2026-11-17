@@ -228,11 +228,31 @@ function LojaEspecificaConteudo({ params }: { params: Promise<{ id: string }> })
 
 				{isDono && (
 					<div className="absolute top-10 right-10 z-20 flex flex-col gap-3">
-						<button className="w-10 h-10 bg-[#8854ff] rounded-full flex items-center justify-center hover:opacity-80 transition text-white">
-							✏️
+						<button
+							type="button"
+							aria-label="Editar loja"
+							className="w-10 h-10 bg-[#6A38F3] rounded-full flex items-center justify-center hover:opacity-80 transition cursor-pointer"
+						>
+							<Image
+								src="/lojas/caneta.svg"
+								alt=""
+								width={20}
+								height={20}
+								aria-hidden="true"
+							/>
 						</button>
-						<button className="w-10 h-10 bg-[#8854ff] rounded-full flex items-center justify-center hover:opacity-80 transition text-white text-2xl">
-							+
+						<button
+							type="button"
+							aria-label="Adicionar produto"
+							className="w-10 h-10 bg-[#6A38F3] rounded-full flex items-center justify-center hover:opacity-80 transition cursor-pointer"
+						>
+							<Image
+								src="/lojas/mais.svg"
+								alt=""
+								width={20}
+								height={20}
+								aria-hidden="true"
+							/>
 						</button>
 					</div>
 				)}
@@ -290,7 +310,7 @@ function LojaEspecificaConteudo({ params }: { params: Promise<{ id: string }> })
 					<div className="flex justify-center mb-10">
 						<button
 							type="button"
-							className="w-max rounded-full bg-[#6A38F3] text-white px-8 py-3 text-lg font-medium cursor-pointer hover:opacity-90 transition-opacity"
+							className="w-[930px] rounded-full bg-[#6A38F3] text-white text-[40px] px-8 py-0 text-lg font-light cursor-pointer hover:opacity-90 transition-opacity"
 						>
 							Adicionar Review
 						</button>
