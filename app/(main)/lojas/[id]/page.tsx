@@ -414,6 +414,7 @@ function LojaEspecificaConteudo({ params }: { params: Promise<{ id: string }> })
 										preco={formatPrice(produto.preco)}
 										lojaLogo={loja.logoUrl}
 										disponivel={produto.estoque > 0 && produto.ativo !== false}
+										statusLayout="stack"
 									/>
 								</div>
 							))}
@@ -443,6 +444,7 @@ function LojaEspecificaConteudo({ params }: { params: Promise<{ id: string }> })
 										preco={formatPrice(produto.preco)}
 										lojaLogo={loja.logoUrl}
 										disponivel={produto.estoque > 0 && produto.ativo !== false}
+										statusLayout="stack"
 									/>
 								))}
 							</div>

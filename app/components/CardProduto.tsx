@@ -6,6 +6,7 @@ interface CardProdutoProps {
   preco: string;
   lojaLogo?: string | null;
   disponivel?: boolean;
+  statusLayout?: 'inline' | 'stack';
 }
 
 export default function CardProduto({
@@ -14,6 +15,7 @@ export default function CardProduto({
   preco,
   lojaLogo,
   disponivel = true,
+  statusLayout = 'inline',
 }: CardProdutoProps) {
   const safeLojaLogo = lojaLogo && lojaLogo.trim() ? lojaLogo : '/Logo.png';
   const safeImagemUrl = imagemUrl && imagemUrl.trim() ? imagemUrl : '/Logo.png';
@@ -41,12 +43,22 @@ export default function CardProduto({
         />
       </div>
 
-      <h3 className="font-semibold text-gray-800 text-sm mb-1 truncate" title={nome}>
+      <h3 className="font-semibold text-gray-800 text-[20px] mb-1 truncate" title={nome}>
         {nome}
       </h3>
-      <div className="flex items-center gap-2">
+      <div className={statusLayout === 'stack' ? 'flex flex-col items-start gap-0.5' : 'flex items-center gap-2'}>
         <span className="font-bold text-gray-900">{preco}</span>
-        {disponivel ? (
+        {statusLayout === 'stack' ? (
+          disponivel ? (
+            <span className="text-[17px] text-green-600 font-semibold">
+              Disponível
+            </span>
+          ) : (
+            <span className="text-[17px] text-red-600 font-semibold">
+              Indisponível
+            </span>
+          )
+        ) : disponivel ? (
           <span className="text-[10px] text-green-600 font-bold bg-green-100 px-1.5 py-0.5 rounded uppercase">
             Disponível
           </span>
