@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { comentariosApi, type Comentario } from "@/lib/stockio-api";
 
-interface ModalCriarAvaliacaoProps {
+interface ModalCriarComentarioProps {
   isOpen: boolean;
   onClose: () => void;
   avaliacaoLojaId?: number;
@@ -11,13 +11,13 @@ interface ModalCriarAvaliacaoProps {
   onComentarioCriado?: (comentarioCriado: Comentario) => void;
 }
 
-export default function ModalCriarAvaliacao({
+export default function ModalCriarComentario({
   isOpen,
   onClose,
   avaliacaoLojaId,
   avaliacaoProdutoId,
   onComentarioCriado,
-}: ModalCriarAvaliacaoProps) {
+}: ModalCriarComentarioProps) {
   const [conteudo, setConteudo] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
