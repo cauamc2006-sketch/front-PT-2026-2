@@ -8,6 +8,13 @@ export type Product = {
   preco: string | number;
   estoque: number;
   ativo?: boolean;
+  categoriaId?: number;
+  categoria?: {
+    id: number;
+    nome: string;
+    slug: string;
+    categoriaPaiId?: number | null;
+  } | null;
   imagens?: ProductImage[];
   loja?: { nome?: string; logoUrl?: string } | null;
 };
@@ -43,6 +50,7 @@ export function parseProducts(payload: unknown): Product[] {
       throw new Error(`Produto ${index + 1} com formato inválido na resposta da API.`);
     }
     const loja = isRecord(entry.loja) ? entry.loja : null;
+    const categoria = isRecord(entry.categoria) ? entry.categoria : null;
     return {
       id: entry.id,
       nome: entry.nome,
@@ -50,6 +58,13 @@ export function parseProducts(payload: unknown): Product[] {
       preco: entry.preco,
       estoque: entry.estoque,
       ativo: typeof entry.ativo === "boolean" ? entry.ativo : true,
+      categoriaId: typeof entry.categoriaId === "number" ? entry.categoriaId : undefined,
+      categoria: categoria ? {
+        id: typeof categoria.id === "number" ? categoria.id : 0,
+        nome: typeof categoria.nome === "string" ? categoria.nome : "",
+        slug: typeof categoria.slug === "string" ? categoria.slug : "",
+        categoriaPaiId: typeof categoria.categoriaPaiId === "number" ? categoria.categoriaPaiId : null,
+      } : null,
       imagens: parseImages(entry.imagens),
       loja: loja ? {
         nome: typeof loja.nome === "string" ? loja.nome : undefined,

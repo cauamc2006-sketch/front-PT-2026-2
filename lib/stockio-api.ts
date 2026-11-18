@@ -3,6 +3,15 @@ import { readSession } from "./session";
 
 export type Loja = { id: number; nome: string; descricao?: string | null; logoUrl?: string | null; usuarioId: number };
 export type Comentario = { id: number; conteudo: string; usuarioId: number; avaliacaoLojaId?: number | null; avaliacaoProdutoId?: number | null };
+export type CategoriaBackend = {
+  id: number;
+  nome: string;
+  slug: string;
+  descricao?: string | null;
+  imagemUrl?: string | null;
+  categoriaPaiId?: number | null;
+  subcategorias?: CategoriaBackend[];
+};
 
 export class StockioApiError extends Error {
   constructor(message: string, readonly status: number) { super(message); this.name = "StockioApiError"; }
@@ -37,6 +46,12 @@ export const lojasApi = {
   criar: (data: { nome: string; descricao?: string; logoUrl?: string }) => request<Loja>("/loja", { method: "POST", body: json(data) }, true),
   atualizar: (id: number, data: Partial<{ nome: string; descricao: string; logoUrl: string }>) => request<Loja>(`/loja/${id}`, { method: "PATCH", body: json(data) }, true),
   excluir: (id: number) => request<Loja>(`/loja/${id}`, { method: "DELETE" }, true),
+};
+
+export const categoriasApi = {
+  listar: (raiz?: boolean) => request<CategoriaBackend[]>(`/categorias${raiz ? "?raiz=true" : ""}`),
+  buscar: (id: number) => request<CategoriaBackend>(`/categorias/${id}`),
+  buscarSubcategorias: (categoriaPaiId: number) => request<CategoriaBackend[]>(`/categorias?categoriaPaiId=${categoriaPaiId}`),
 };
 
 export const comentariosApi = {

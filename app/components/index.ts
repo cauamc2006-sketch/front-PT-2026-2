@@ -1,3 +1,4 @@
+export { default as BarraPesquisa } from "./BarraPesquisa";
 export { default as CardCategoria } from "./CardCategoria";
 export { default as CardProduto } from "./CardProduto";
 export { default as Navbar } from "./Navbar";
