@@ -188,7 +188,7 @@ export default function ModalAdicionarProduto({
 
         {/* Área de Upload de Imagens */}
         <div className="flex flex-col gap-4 mb-6">
-          {/* Caixa Principal (índice 0) */}
+          {/* Caixa Principal */}
           <div className="relative w-full">
             <input
               ref={(el) => {

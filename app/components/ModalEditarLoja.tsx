@@ -73,35 +73,12 @@ export default function ModalEditarLoja({
     setNome(loja.nome);
     setErro(null);
     setCategoriasAbertas(false);
+    setCategoriaSelecionada(null);
 
     categoriasApi
       .listar()
       .then((lista) => {
-        if (!ativo) return;
-        setCategorias(lista);
-
-        // Tenta pré-selecionar a categoria atual da loja (por categoriaId ou nome)
-        const lojaAny = loja as Loja & {
-          categoriaId?: number;
-          categoria?: string | { id: number; nome: string };
-        };
-
-        const encontrada = lista.find((cat) => {
-          if (lojaAny.categoriaId && cat.id === lojaAny.categoriaId) return true;
-          if (
-            typeof lojaAny.categoria === "object" &&
-            lojaAny.categoria?.id === cat.id
-          )
-            return true;
-          if (
-            typeof lojaAny.categoria === "string" &&
-            normalizarTexto(cat.nome) === normalizarTexto(lojaAny.categoria)
-          )
-            return true;
-          return false;
-        });
-
-        setCategoriaSelecionada(encontrada ?? null);
+        if (ativo) setCategorias(lista);
       })
       .catch(() => {
         if (ativo) setCategorias([]);
@@ -148,6 +125,9 @@ export default function ModalEditarLoja({
     setPreviewLogoSvg(null);
     setBanner(null);
     setPreviewBanner(null);
+    if (fotoPerfilRef.current) fotoPerfilRef.current.value = "";
+    if (logoSvgRef.current) logoSvgRef.current.value = "";
+    if (bannerRef.current) bannerRef.current.value = "";
     setErro(null);
     onClose();
   }
