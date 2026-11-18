@@ -147,6 +147,10 @@ export const avaliacoesLojaApi = {
   },
   criar: (data: { lojaId: number; nota: number; comentario?: string }) =>
     request<AvaliacaoLoja>("/avaliacao-loja", { method: "POST", body: json(data) }, true),
+  atualizar: (id: number, data: { nota?: number; comentario?: string }) =>
+    request<AvaliacaoLoja>(`/avaliacao-loja/${id}`, { method: "PATCH", body: json(data) }, true),
+  excluir: (id: number) =>
+    request<AvaliacaoLoja>(`/avaliacao-loja/${id}`, { method: "DELETE" }, true),
 };
 
 export const avaliacoesProdutoApi = {
