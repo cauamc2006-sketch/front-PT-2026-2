@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import CardProduto from "@/app/components/CardProduto";
 import { readSession } from "@/lib/session";
+import ModalAdicionarProduto from "@/app/components/ModalAdicionarProduto";
 import {
 	lojasApi,
 	avaliacoesLojaApi,
@@ -95,6 +96,7 @@ function LojaEspecificaConteudo({ params }: { params: Promise<{ id: string }> })
 	const [verTodasAvaliacoes, setVerTodasAvaliacoes] = useState(false);
 	const [carregando, setCarregando] = useState(true);
 	const [erro, setErro] = useState<string | null>(null);
+	const [modalProdutoAberto, setModalProdutoAberto] = useState(false);
 
 	const reviewsScroll = useDragScroll();
 	const melhorAvaliadosScroll = useDragScroll();
@@ -244,6 +246,7 @@ function LojaEspecificaConteudo({ params }: { params: Promise<{ id: string }> })
 						<button
 							type="button"
 							aria-label="Adicionar produto"
+							onClick={() => setModalProdutoAberto(true)}
 							className="w-10 h-10 bg-[#6A38F3] rounded-full flex items-center justify-center hover:opacity-80 transition cursor-pointer"
 						>
 							<Image
@@ -483,6 +486,13 @@ function LojaEspecificaConteudo({ params }: { params: Promise<{ id: string }> })
 				</div>
 			</section>
 			)}
+
+			<ModalAdicionarProduto
+				isOpen={modalProdutoAberto}
+				onClose={() => setModalProdutoAberto(false)}
+				lojaId={loja.id}
+				onProdutoCriado={(novoProduto) => setProdutos((prev) => [novoProduto, ...prev])}
+			/>
 		</main>
 	);
 }

@@ -26,6 +26,13 @@ export type AvaliacaoProduto = {
   nota: number;
   comentario?: string | null;
 };
+export type Categoria = {
+  id: number;
+  nome: string;
+  slug: string;
+  imagemUrl?: string | null;
+  categoriaPaiId?: number | null;
+};
 
 export class StockioApiError extends Error {
   constructor(message: string, readonly status: number) { super(message); this.name = "StockioApiError"; }
@@ -96,8 +103,51 @@ export const avaliacoesProdutoApi = {
   },
 };
 
+export const categoriasApi = {
+  listar: () => request<Categoria[]>("/categorias"),
+};
+
 export const produtosApi = {
   listar: (signal?: AbortSignal, lojaId?: number) => getProducts(signal, lojaId),
+  criar: (data: {
+    lojaId: number;
+    categoriaId: number;
+    nome: string;
+    descricao?: string;
+    preco: number;
+    estoque: number;
+    ativo?: boolean;
+    imagens?: string[];
+  }) => request<Product>("/produto", { method: "POST", body: json(data) }, true),
+  uploadImagens: async (files: File[]): Promise<string[]> => {
+    if (files.length === 0) return [];
+    const session = readSession();
+    const token = session?.token ?? (typeof window !== "undefined" ? window.localStorage.getItem("token") : null);
+    if (!token) throw new StockioApiError("Faça login para continuar.", 401);
+
+    const formData = new FormData();
+    for (const file of files) {
+      formData.append("files", file);
+    }
+
+    let response: Response;
+    try {
+      response = await fetch(`${API_URL}/produto/upload`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+    } catch {
+      throw new StockioApiError("Não foi possível conectar ao backend.", 0);
+    }
+
+    if (!response.ok) {
+      throw new StockioApiError(`Erro ao enviar imagens (HTTP ${response.status}).`, response.status);
+    }
+
+    const data = (await response.json()) as { urls?: string[] };
+    return Array.isArray(data.urls) ? data.urls : [];
+  },
 };
 
 export * as userApi from "./profile-api";
