@@ -7,6 +7,7 @@ export type Loja = {
   descricao?: string | null;
   logoUrl?: string | null;
   bannerUrl?: string | null;
+  stickerUrl?: string | null;
   usuarioId: number;
   usuario?: { id: number; nome?: string | null; username?: string | null; fotoPerfilUrl?: string | null } | null;
 };
@@ -79,12 +80,46 @@ async function request<T>(path: string, init: RequestInit = {}, authenticated = 
 }
 const json = (value: unknown) => JSON.stringify(value);
 
+async function uploadFiles(path: string, files: File[]): Promise<string[]> {
+  if (files.length === 0) return [];
+  const session = readSession();
+  const token = session?.token ?? (typeof window !== "undefined" ? window.localStorage.getItem("token") : null);
+  if (!token) throw new StockioApiError("Faça login para continuar.", 401);
+
+  const formData = new FormData();
+  for (const file of files) {
+    formData.append("files", file);
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+  } catch {
+    throw new StockioApiError("Não foi possível conectar ao backend.", 0);
+  }
+
+  if (!response.ok) {
+    throw new StockioApiError(`Erro ao enviar imagens (HTTP ${response.status}).`, response.status);
+  }
+
+  const data = (await response.json()) as { urls?: string[] };
+  return Array.isArray(data.urls) ? data.urls : [];
+}
+
 export const lojasApi = {
   listar: () => request<Loja[]>("/loja"),
   buscar: (id: number) => request<Loja>(`/loja/${id}`),
   criar: (data: { nome: string; descricao?: string; logoUrl?: string }) => request<Loja>("/loja", { method: "POST", body: json(data) }, true),
-  atualizar: (id: number, data: Partial<{ nome: string; descricao: string; logoUrl: string }>) => request<Loja>(`/loja/${id}`, { method: "PATCH", body: json(data) }, true),
+  atualizar: (
+    id: number,
+    data: Partial<{ nome: string; descricao: string; logoUrl: string; bannerUrl: string; stickerUrl: string }>,
+  ) => request<Loja>(`/loja/${id}`, { method: "PATCH", body: json(data) }, true),
   excluir: (id: number) => request<Loja>(`/loja/${id}`, { method: "DELETE" }, true),
+  uploadImagens: (files: File[]) => uploadFiles("/loja/upload", files),
 };
 
 export const comentariosApi = {
@@ -139,35 +174,7 @@ export const produtosApi = {
     ativo?: boolean;
     imagens?: string[];
   }) => request<Product>("/produto", { method: "POST", body: json(data) }, true),
-  uploadImagens: async (files: File[]): Promise<string[]> => {
-    if (files.length === 0) return [];
-    const session = readSession();
-    const token = session?.token ?? (typeof window !== "undefined" ? window.localStorage.getItem("token") : null);
-    if (!token) throw new StockioApiError("Faça login para continuar.", 401);
-
-    const formData = new FormData();
-    for (const file of files) {
-      formData.append("files", file);
-    }
-
-    let response: Response;
-    try {
-      response = await fetch(`${API_URL}/produto/upload`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-    } catch {
-      throw new StockioApiError("Não foi possível conectar ao backend.", 0);
-    }
-
-    if (!response.ok) {
-      throw new StockioApiError(`Erro ao enviar imagens (HTTP ${response.status}).`, response.status);
-    }
-
-    const data = (await response.json()) as { urls?: string[] };
-    return Array.isArray(data.urls) ? data.urls : [];
-  },
+  uploadImagens: (files: File[]) => uploadFiles("/produto/upload", files),
 };
 
 export * as userApi from "./profile-api";

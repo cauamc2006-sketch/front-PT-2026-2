@@ -5,8 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import CardProduto from "@/app/components/CardProduto";
 import { readSession } from "@/lib/session";
+import { useRouter } from "next/navigation";
 import ModalAdicionarProduto from "@/app/components/ModalAdicionarProduto";
 import ModalAvaliarLoja from "@/app/components/ModalAvaliarLoja";
+import ModalEditarLoja from "@/app/components/ModalEditarLoja";
 import {
 	lojasApi,
 	avaliacoesLojaApi,
@@ -99,6 +101,8 @@ function LojaEspecificaConteudo({ params }: { params: Promise<{ id: string }> })
 	const [erro, setErro] = useState<string | null>(null);
 	const [modalProdutoAberto, setModalProdutoAberto] = useState(false);
 	const [modalAvaliarAberto, setModalAvaliarAberto] = useState(false);
+	const router = useRouter();
+    const [modalEditarAberto, setModalEditarAberto] = useState(false);
 
 	const reviewsScroll = useDragScroll();
 	const melhorAvaliadosScroll = useDragScroll();
@@ -235,6 +239,7 @@ function LojaEspecificaConteudo({ params }: { params: Promise<{ id: string }> })
 						<button
 							type="button"
 							aria-label="Editar loja"
+							onClick={() => setModalEditarAberto(true)}
 							className="w-10 h-10 bg-[#6A38F3] rounded-full flex items-center justify-center hover:opacity-80 transition cursor-pointer"
 						>
 							<Image
@@ -507,6 +512,14 @@ function LojaEspecificaConteudo({ params }: { params: Promise<{ id: string }> })
 				onAvaliacaoCriada={(novaAvaliacao) =>
 					setAvaliacoes((prev) => [novaAvaliacao, ...prev])
 			}
+			/>
+
+			<ModalEditarLoja
+				isOpen={modalEditarAberto}
+				onClose={() => setModalEditarAberto(false)}
+				loja={loja}
+				onLojaAtualizada={(lojaAtualizada) => setLoja(lojaAtualizada)}
+				onLojaExcluida={() => router.push("/lojas")}
 			/>
 		</main>
 	);

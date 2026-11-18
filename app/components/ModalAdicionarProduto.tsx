@@ -170,7 +170,7 @@ export default function ModalAdicionarProduto({
     >
       <form
         onSubmit={handleSubmit}
-        className="bg-[#EEEEEE] w-[600px] max-h-[92vh] overflow-y-auto rounded-[32px] p-8 relative flex flex-col shadow-2xl"
+        className="bg-[#EEEEEE] w-[600px] rounded-[32px] p-8 relative flex flex-col shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -356,7 +356,7 @@ export default function ModalAdicionarProduto({
             value={descricao}
             onChange={(e) => setDescricao(e.target.value)}
             placeholder="Descrição do produto"
-            className="w-full bg-white rounded-[24px] px-6 py-4 outline-none text-black h-32 resize-none placeholder:font-light shadow-sm focus:ring-1 focus:ring-[#6A38F3]"
+            className="w-full bg-white rounded-[24px] px-6 py-4 outline-none text-black h-24 resize-none placeholder:font-light shadow-sm focus:ring-1 focus:ring-[#6A38F3]"
           ></textarea>
 
           <input
