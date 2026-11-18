@@ -51,9 +51,27 @@ async function request<T>(path: string, init: RequestInit = {}, authenticated = 
     });
   } catch { throw new StockioApiError("Não foi possível conectar ao backend.", 0); }
   if (!response.ok) {
-    const message = response.status === 401 ? "Sessão inválida ou expirada." :
-      response.status === 403 ? "Você não tem permissão para esta operação." :
-      response.status === 404 ? "Registro não encontrado." : `Erro HTTP ${response.status}.`;
+    let apiMessage = "";
+    try {
+      const body = (await response.json()) as { message?: unknown };
+      if (typeof body?.message === "string") {
+        apiMessage = body.message;
+      } else if (Array.isArray(body?.message)) {
+        apiMessage = body.message.filter((m): m is string => typeof m === "string").join(" ");
+      }
+    } catch {
+      apiMessage = "";
+    }
+
+    const message =
+      apiMessage ||
+      (response.status === 401
+        ? "Sessão inválida ou expirada."
+        : response.status === 403
+          ? "Você não tem permissão para esta operação."
+          : response.status === 404
+            ? "Registro não encontrado."
+            : `Erro HTTP ${response.status}.`);
     throw new StockioApiError(message, response.status);
   }
   if (response.status === 204) return undefined as T;
@@ -92,6 +110,8 @@ export const avaliacoesLojaApi = {
     if (filtro?.usuarioId) params.set("usuarioId", String(filtro.usuarioId));
     return request<AvaliacaoLoja[]>(`/avaliacao-loja${params.size ? `?${params}` : ""}`);
   },
+  criar: (data: { lojaId: number; nota: number; comentario?: string }) =>
+    request<AvaliacaoLoja>("/avaliacao-loja", { method: "POST", body: json(data) }, true),
 };
 
 export const avaliacoesProdutoApi = {

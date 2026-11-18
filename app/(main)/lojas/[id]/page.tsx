@@ -6,6 +6,7 @@ import Link from "next/link";
 import CardProduto from "@/app/components/CardProduto";
 import { readSession } from "@/lib/session";
 import ModalAdicionarProduto from "@/app/components/ModalAdicionarProduto";
+import ModalAvaliarLoja from "@/app/components/ModalAvaliarLoja";
 import {
 	lojasApi,
 	avaliacoesLojaApi,
@@ -97,6 +98,7 @@ function LojaEspecificaConteudo({ params }: { params: Promise<{ id: string }> })
 	const [carregando, setCarregando] = useState(true);
 	const [erro, setErro] = useState<string | null>(null);
 	const [modalProdutoAberto, setModalProdutoAberto] = useState(false);
+	const [modalAvaliarAberto, setModalAvaliarAberto] = useState(false);
 
 	const reviewsScroll = useDragScroll();
 	const melhorAvaliadosScroll = useDragScroll();
@@ -309,10 +311,11 @@ function LojaEspecificaConteudo({ params }: { params: Promise<{ id: string }> })
 					</div>
 				)}
 
-				{verTodasAvaliacoes && estaLogado && (
+				{(verTodasAvaliacoes || avaliacoes.length === 0) && estaLogado && (
 					<div className="flex justify-center mb-10">
 						<button
 							type="button"
+							onClick={() => setModalAvaliarAberto(true)}
 							className="w-[930px] rounded-full bg-[#6A38F3] text-white text-[40px] px-8 py-0 text-lg font-light cursor-pointer hover:opacity-90 transition-opacity"
 						>
 							Adicionar Review
@@ -494,6 +497,16 @@ function LojaEspecificaConteudo({ params }: { params: Promise<{ id: string }> })
 				onClose={() => setModalProdutoAberto(false)}
 				lojaId={loja.id}
 				onProdutoCriado={(novoProduto) => setProdutos((prev) => [novoProduto, ...prev])}
+			/>
+
+			<ModalAvaliarLoja
+				isOpen={modalAvaliarAberto}
+				onClose={() => setModalAvaliarAberto(false)}
+				lojaId={loja.id}
+				lojaNome={loja.nome}
+				onAvaliacaoCriada={(novaAvaliacao) =>
+					setAvaliacoes((prev) => [novaAvaliacao, ...prev])
+			}
 			/>
 		</main>
 	);
