@@ -281,11 +281,8 @@ function ConteudoCategoria() {
   const fraseBanner = categoriaLocal?.fraseBanner ?? `O universo de ${nomeExibicao}\nem um só lugar`;
   const linhasFrase = fraseBanner.split("\n");
 
-  // Ilustração temática da categoria (Figma: categoriaEletronicos.png, etc.)
-  const bannerImagem =
-    categoriaBackend?.imagemUrl ||
-    categoriaLocal?.imagem ||
-    "/Feed/categoriaEletronicos.png";
+  // Mascote padrão exibido em todas as páginas de categoria.
+  const bannerImagem = "/Stockles - Mascote da Stock.io.svg";
 
   return (
     <main className="min-h-screen bg-[#F6F3E4]">
