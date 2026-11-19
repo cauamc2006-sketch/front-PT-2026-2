@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { lojasApi, type Loja } from "@/lib/stockio-api";
 import { CATEGORIAS } from "@/lib/constants";
 
@@ -12,9 +13,10 @@ function SecaoCategorias() {
       
       <div className="flex gap-6 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {CATEGORIAS.map((cat) => (
-          <div 
-            key={cat.nome} 
-            className="flex-shrink-0 relative w-[120px] h-[120px] cursor-pointer hover:opacity-80 transition-opacity"
+          <Link
+            key={cat.nome}
+            href={`/categoria/${cat.slug}`}
+            className="flex-shrink-0 relative w-[120px] h-[120px] cursor-pointer hover:opacity-80 hover:scale-105 transition-all outline-none focus-visible:ring-2 focus-visible:ring-white rounded-2xl"
           >
             <Image 
               src={cat.imagem} 
@@ -22,7 +24,7 @@ function SecaoCategorias() {
               fill
               className="object-contain"
             />
-          </div>
+          </Link>
         ))}
         
         <div className="flex-shrink-0 w-4"></div>

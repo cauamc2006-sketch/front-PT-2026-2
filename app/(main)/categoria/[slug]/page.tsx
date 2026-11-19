@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import BarraPesquisa from "@/app/components/BarraPesquisa";
 import CardProduto from "@/app/components/CardProduto";
 import { getProducts, formatPrice, type Product } from "@/lib/products";
@@ -22,6 +22,12 @@ interface OpcaoConfig {
   label: string;
 }
 
+export interface SubcategoriaItem {
+  id?: number;
+  nome: string;
+  slug?: string;
+}
+
 const OPCOES_ORDENACAO: OpcaoConfig[] = [
   { id: "padrao", label: "Padrão" },
   { id: "menor-preco", label: "Menor preço" },
@@ -32,13 +38,19 @@ const OPCOES_ORDENACAO: OpcaoConfig[] = [
 
 export default function TelaCategoria() {
   const params = useParams();
-  const slugParam = typeof params?.slug === "string" ? params.slug : Array.isArray(params?.slug) ? params.slug[0] : "";
-  const slug = slugParam.toLowerCase().trim();
+  const rawParam =
+    typeof params?.slug === "string"
+      ? params.slug
+      : Array.isArray(params?.slug)
+      ? params.slug[0]
+      : "";
+  const slug = decodeURIComponent(rawParam).toLowerCase().trim();
 
+  // Informações estáticas/visuais de fallback (ícone, banner temático, subcategorias padrão)
   const categoriaLocal = useMemo(() => getCategoriaPorSlug(slug), [slug]);
 
   const [categoriaBackend, setCategoriaBackend] = useState<CategoriaBackend | null>(null);
-  const [subcategorias, setSubcategorias] = useState<string[]>([]);
+  const [subcategorias, setSubcategorias] = useState<SubcategoriaItem[]>([]);
   const [subcategoriaSelecionada, setSubcategoriaSelecionada] = useState<string | null>(null);
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -51,15 +63,26 @@ export default function TelaCategoria() {
   const [menuOrdenacaoAberto, setMenuOrdenacaoAberto] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Fecha dropdown ao clicar fora
+  // Fecha o dropdown ao clicar fora ou apertar Escape (Acessibilidade)
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setMenuOrdenacaoAberto(false);
       }
     }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMenuOrdenacaoAberto(false);
+      }
+    }
+
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, []);
 
   // Busca dados da categoria e subcategorias no backend
@@ -72,22 +95,49 @@ export default function TelaCategoria() {
         if (!ativo) return;
 
         const encontrada = todas.find(
-          (c) => c.slug.toLowerCase() === slug || c.nome.toLowerCase() === slug
+          (c) =>
+            c.slug.toLowerCase() === slug ||
+            c.nome.toLowerCase() === slug ||
+            c.nome.toLowerCase() === categoriaLocal?.nome.toLowerCase()
         );
 
         if (encontrada) {
           setCategoriaBackend(encontrada);
+
+          // Popula subcategorias da API (aninhadas ou com categoriaPaiId)
+          let subList: SubcategoriaItem[] = [];
           if (encontrada.subcategorias && encontrada.subcategorias.length > 0) {
-            setSubcategorias(encontrada.subcategorias.map((s) => s.nome));
+            subList = encontrada.subcategorias.map((s) => ({
+              id: s.id,
+              nome: s.nome,
+              slug: s.slug,
+            }));
           } else {
-            setSubcategorias(categoriaLocal?.subcategoriasPadrao ?? []);
+            const filhas = todas.filter((c) => c.categoriaPaiId === encontrada.id);
+            if (filhas.length > 0) {
+              subList = filhas.map((s) => ({
+                id: s.id,
+                nome: s.nome,
+                slug: s.slug,
+              }));
+            }
           }
+
+          // Se a API ainda não possui subcategorias cadastradas, usa o padrão do Figma
+          if (subList.length === 0 && categoriaLocal?.subcategoriasPadrao) {
+            subList = categoriaLocal.subcategoriasPadrao.map((nome) => ({ nome }));
+          }
+
+          setSubcategorias(subList);
         } else {
-          setSubcategorias(categoriaLocal?.subcategoriasPadrao ?? []);
+          // Fallback se não encontrada no banco
+          if (categoriaLocal?.subcategoriasPadrao) {
+            setSubcategorias(categoriaLocal.subcategoriasPadrao.map((nome) => ({ nome })));
+          }
         }
       } catch {
-        if (ativo) {
-          setSubcategorias(categoriaLocal?.subcategoriasPadrao ?? []);
+        if (ativo && categoriaLocal?.subcategoriasPadrao) {
+          setSubcategorias(categoriaLocal.subcategoriasPadrao.map((nome) => ({ nome })));
         }
       }
     }
@@ -99,7 +149,7 @@ export default function TelaCategoria() {
     };
   }, [slug, categoriaLocal]);
 
-  // Busca produtos do backend
+  // Busca produtos reais do backend
   useEffect(() => {
     const controller = new AbortController();
     let ativo = true;
@@ -124,36 +174,60 @@ export default function TelaCategoria() {
     };
   }, [reload]);
 
-  // Filtra e ordena produtos
+  // Filtra e ordena produtos de forma combinada e determinística
   const produtosFiltrados = useMemo(() => {
-    const nomeCategoria = categoriaLocal?.nome.toLowerCase() ?? slug;
+    const nomeCategoria = (categoriaBackend?.nome ?? categoriaLocal?.nome ?? slug).toLowerCase();
     const catId = categoriaBackend?.id;
+    const subIds = new Set(
+      subcategorias.map((s) => s.id).filter((id): id is number => id !== undefined)
+    );
 
+    // 1. Filtro da Categoria Principal
     let lista = products.filter((p) => {
-      // Filtra por categoria
-      const pertenceCategoria =
-        p.categoria?.slug.toLowerCase() === slug ||
-        p.categoria?.nome.toLowerCase() === nomeCategoria ||
-        (catId !== undefined && p.categoriaId === catId) ||
-        (catId !== undefined && p.categoria?.categoriaPaiId === catId);
+      if (p.categoria) {
+        const prodCatSlug = p.categoria.slug.toLowerCase();
+        const prodCatNome = p.categoria.nome.toLowerCase();
+        if (prodCatSlug === slug || prodCatNome === nomeCategoria) return true;
+        if (catId !== undefined && (p.categoriaId === catId || p.categoria.categoriaPaiId === catId)) {
+          return true;
+        }
+        if (p.categoriaId && subIds.has(p.categoriaId)) {
+          return true;
+        }
+      }
 
-      // Se a categoria ainda não tiver produtos cadastrados diretamente no backend com essa categoriaId,
-      // não filtra totalmente se o banco tiver apenas produtos sem categoria associada (fallback para visualização)
-      return pertenceCategoria || (!p.categoriaId && !p.categoria);
+      if (catId !== undefined && p.categoriaId === catId) {
+        return true;
+      }
+      if (p.categoriaId && subIds.has(p.categoriaId)) {
+        return true;
+      }
+
+      // Fallback permissivo apenas para produtos antigos/mock sem categoria atribuída
+      return !p.categoriaId && !p.categoria;
     });
 
-    // Filtra por subcategoria selecionada
+    // 2. Filtro de Subcategoria Selecionada
     if (subcategoriaSelecionada) {
-      const sub = subcategoriaSelecionada.toLowerCase();
+      const subItem = subcategorias.find((s) => s.nome === subcategoriaSelecionada);
+      const subTermo = subcategoriaSelecionada.toLowerCase();
+
       lista = lista.filter((p) => {
+        if (subItem?.id && p.categoriaId === subItem.id) {
+          return true;
+        }
+        const pCatNome = (p.categoria?.nome ?? "").toLowerCase();
+        const pCatSlug = (p.categoria?.slug ?? "").toLowerCase();
+        if (pCatNome === subTermo || (subItem?.slug && pCatSlug === subItem.slug.toLowerCase())) {
+          return true;
+        }
         const nomeProd = p.nome.toLowerCase();
         const descProd = (p.descricao ?? "").toLowerCase();
-        const catNome = (p.categoria?.nome ?? "").toLowerCase();
-        return nomeProd.includes(sub) || descProd.includes(sub) || catNome === sub;
+        return nomeProd.includes(subTermo) || descProd.includes(subTermo);
       });
     }
 
-    // Filtra por texto na Barra de Pesquisa
+    // 3. Filtro de Busca Textual (Barra de Pesquisa)
     if (busca.trim()) {
       const termo = busca.toLowerCase().trim();
       lista = lista.filter(
@@ -163,7 +237,7 @@ export default function TelaCategoria() {
       );
     }
 
-    // Ordenação
+    // 4. Ordenação
     const resultado = [...lista];
     switch (ordenacao) {
       case "menor-preco":
@@ -187,22 +261,43 @@ export default function TelaCategoria() {
     }
 
     return resultado;
-  }, [products, slug, categoriaLocal, categoriaBackend, subcategoriaSelecionada, busca, ordenacao]);
+  }, [
+    products,
+    slug,
+    categoriaLocal,
+    categoriaBackend,
+    subcategorias,
+    subcategoriaSelecionada,
+    busca,
+    ordenacao,
+  ]);
 
-  const nomeExibicao = categoriaBackend?.nome ?? categoriaLocal?.nome ?? slugParam;
+  const limparFiltros = useCallback(() => {
+    setBusca("");
+    setSubcategoriaSelecionada(null);
+  }, []);
+
+  const nomeExibicao = categoriaBackend?.nome ?? categoriaLocal?.nome ?? rawParam;
   const fraseBanner = categoriaLocal?.fraseBanner ?? `O universo de ${nomeExibicao}\nem um só lugar`;
   const linhasFrase = fraseBanner.split("\n");
 
+  // Ilustração temática da categoria (Figma: categoriaEletronicos.png, etc.)
+  const bannerImagem =
+    categoriaBackend?.imagemUrl ||
+    categoriaLocal?.imagem ||
+    "/Feed/categoriaEletronicos.png";
+
   return (
     <main className="min-h-screen bg-[#F6F3E4]">
-      {/* Banner Superior Preto com Ilustração do Mascote */}
-      <section className="bg-black text-white min-h-[220px] md:min-h-[260px] px-8 md:px-16 py-12 flex justify-between items-center relative overflow-hidden">
+      {/* Banner Superior Preto com Ilustração Temática da Categoria (Figma) */}
+      <section className="bg-black text-white min-h-[220px] md:min-h-[270px] px-8 md:px-16 py-12 flex justify-between items-center relative overflow-hidden">
         <div className="relative z-10 max-w-xl">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-xs md:text-sm text-gray-400 hover:text-white mb-3 transition-colors"
+            className="inline-flex items-center gap-2 text-xs md:text-sm text-gray-300 hover:text-white mb-3 transition-colors group"
           >
-            ← Voltar para o Feed
+            <span className="transform group-hover:-translate-x-1 transition-transform">←</span>
+            <span>Voltar para o Feed</span>
           </Link>
           <h1 className="text-3xl md:text-5xl font-bold leading-tight tracking-tight">
             {linhasFrase[0]}
@@ -215,19 +310,22 @@ export default function TelaCategoria() {
           </h1>
         </div>
 
-        {/* Ilustração do Mascote (Figma) */}
-        <div className="absolute right-4 md:right-16 bottom-0 w-[220px] md:w-[320px] h-[95%] pointer-events-none">
-          <Image
-            src="/boneco-cadastro.svg"
-            alt="Mascote STOCK.IO"
-            fill
-            className="object-contain object-bottom"
-            priority
-          />
+        {/* Ilustração Temática da Categoria (Figma: ilustrações em 3D da categoria) */}
+        <div className="absolute right-4 md:right-16 bottom-0 w-[180px] sm:w-[240px] md:w-[320px] h-[85%] md:h-[95%] pointer-events-none flex items-end justify-end">
+          <div className="relative w-full h-full">
+            <Image
+              src={bannerImagem}
+              alt={`Ilustração temática da categoria ${nomeExibicao}`}
+              fill
+              className="object-contain object-bottom drop-shadow-2xl"
+              priority
+              unoptimized={bannerImagem.startsWith("http")}
+            />
+          </div>
         </div>
       </section>
 
-      {/* Barra de Pesquisa Reutilizável (Figma) */}
+      {/* Barra de Pesquisa Reutilizável com Busca Contextual (Figma) */}
       <div className="flex justify-center -mt-6 md:-mt-7 mb-8 relative z-20 px-4">
         <BarraPesquisa
           value={busca}
@@ -240,13 +338,13 @@ export default function TelaCategoria() {
       {/* Conteúdo Principal */}
       <div className="max-w-7xl mx-auto px-6 md:px-10 pb-16">
         {/* Linha de Subcategorias e Seletor "ordenar por" */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-          {/* Pílulas de Subcategorias */}
-          <div className="flex flex-wrap items-center gap-2 md:gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          {/* Pílulas de Subcategorias (Chips com scroll suave em mobile) */}
+          <div className="flex items-center gap-2 md:gap-3 overflow-x-auto pb-2 sm:pb-0 sm:flex-wrap [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             <button
               type="button"
               onClick={() => setSubcategoriaSelecionada(null)}
-              className={`rounded-full px-5 py-2 text-sm md:text-base font-semibold transition-all shadow-sm ${
+              className={`flex-shrink-0 rounded-full px-5 py-2 text-sm md:text-base font-semibold transition-all shadow-sm cursor-pointer ${
                 subcategoriaSelecionada === null
                   ? "bg-[#6A38F3] text-white shadow-purple-200"
                   : "bg-white text-[#6A38F3] hover:bg-purple-50"
@@ -256,30 +354,31 @@ export default function TelaCategoria() {
             </button>
 
             {subcategorias.map((sub) => {
-              const ativo = subcategoriaSelecionada === sub;
+              const ativo = subcategoriaSelecionada === sub.nome;
               return (
                 <button
-                  key={sub}
+                  key={sub.nome}
                   type="button"
-                  onClick={() => setSubcategoriaSelecionada(ativo ? null : sub)}
-                  className={`rounded-full px-5 py-2 text-sm md:text-base font-semibold transition-all shadow-sm ${
+                  onClick={() => setSubcategoriaSelecionada(ativo ? null : sub.nome)}
+                  className={`flex-shrink-0 rounded-full px-5 py-2 text-sm md:text-base font-semibold transition-all shadow-sm cursor-pointer ${
                     ativo
                       ? "bg-[#6A38F3] text-white shadow-purple-200"
                       : "bg-white text-[#6A38F3] hover:bg-purple-50"
                   }`}
                 >
-                  {sub}
+                  {sub.nome}
                 </button>
               );
             })}
           </div>
 
           {/* Seletor "ordenar por" (Figma) */}
-          <div className="relative" ref={dropdownRef}>
+          <div className="relative self-end sm:self-auto flex-shrink-0" ref={dropdownRef}>
             <button
               type="button"
               onClick={() => setMenuOrdenacaoAberto((prev) => !prev)}
               aria-expanded={menuOrdenacaoAberto}
+              aria-haspopup="listbox"
               className="bg-white text-[#6A38F3] rounded-full px-6 py-2.5 text-sm md:text-base font-semibold flex items-center gap-2 shadow-sm border border-transparent hover:border-purple-200 transition-all cursor-pointer"
             >
               <span>ordenar por</span>
@@ -292,6 +391,7 @@ export default function TelaCategoria() {
                 className={`transition-transform duration-200 ${
                   menuOrdenacaoAberto ? "rotate-180" : ""
                 }`}
+                aria-hidden="true"
               >
                 <path
                   d="M1 1.5L7 7.5L13 1.5"
@@ -305,28 +405,37 @@ export default function TelaCategoria() {
 
             {/* Menu Dropdown Expandido (Figma) */}
             {menuOrdenacaoAberto && (
-              <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 p-3 z-30 animate-in fade-in zoom-in-95 duration-100">
+              <div
+                role="listbox"
+                className="absolute right-0 top-full mt-2 w-60 bg-white rounded-2xl shadow-xl border border-gray-100 p-3 z-30 animate-in fade-in zoom-in-95 duration-100"
+              >
                 <div className="flex items-center justify-between pb-2 mb-2 border-b border-gray-100 px-2">
                   <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                     ordenar
                   </span>
-                  <svg
-                    width="12"
-                    height="8"
-                    viewBox="0 0 14 9"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="rotate-180 cursor-pointer"
+                  <button
+                    type="button"
                     onClick={() => setMenuOrdenacaoAberto(false)}
+                    aria-label="Fechar menu de ordenação"
+                    className="p-1 hover:opacity-75 transition-opacity"
                   >
-                    <path
-                      d="M1 1.5L7 7.5L13 1.5"
-                      stroke="#6A38F3"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
+                    <svg
+                      width="12"
+                      height="8"
+                      viewBox="0 0 14 9"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="rotate-180"
+                    >
+                      <path
+                        d="M1 1.5L7 7.5L13 1.5"
+                        stroke="#6A38F3"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
                 </div>
 
                 <div className="space-y-1">
@@ -336,11 +445,13 @@ export default function TelaCategoria() {
                       <button
                         key={opcao.id}
                         type="button"
+                        role="option"
+                        aria-selected={ativa}
                         onClick={() => {
                           setOrdenacao(opcao.id);
                           setMenuOrdenacaoAberto(false);
                         }}
-                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors text-left ${
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors text-left cursor-pointer ${
                           ativa
                             ? "bg-purple-50 text-[#6A38F3]"
                             : "text-gray-700 hover:bg-gray-50"
@@ -365,7 +476,7 @@ export default function TelaCategoria() {
           </div>
         </div>
 
-        {/* Grid de Produtos (5 colunas no Desktop) */}
+        {/* Grid de Produtos (5 colunas responsivo) */}
         {carregando ? (
           <div className="flex flex-col items-center justify-center py-24 text-gray-500">
             <div className="w-10 h-10 border-4 border-[#6A38F3] border-t-transparent rounded-full animate-spin mb-4" />
@@ -381,7 +492,7 @@ export default function TelaCategoria() {
                 setErro(null);
                 setReload((v) => v + 1);
               }}
-              className="px-5 py-2 bg-red-600 text-white rounded-full font-semibold hover:bg-red-700 transition-colors text-sm"
+              className="px-5 py-2 bg-red-600 text-white rounded-full font-semibold hover:bg-red-700 transition-colors text-sm cursor-pointer"
             >
               Tentar novamente
             </button>
@@ -397,11 +508,8 @@ export default function TelaCategoria() {
             {(busca || subcategoriaSelecionada) && (
               <button
                 type="button"
-                onClick={() => {
-                  setBusca("");
-                  setSubcategoriaSelecionada(null);
-                }}
-                className="px-6 py-2.5 bg-[#6A38F3] text-white rounded-full text-sm font-semibold hover:bg-purple-700 transition-colors"
+                onClick={limparFiltros}
+                className="px-6 py-2.5 bg-[#6A38F3] text-white rounded-full text-sm font-semibold hover:bg-purple-700 transition-colors cursor-pointer"
               >
                 Limpar filtros
               </button>
