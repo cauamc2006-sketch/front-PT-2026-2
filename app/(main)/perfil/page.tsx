@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ProfileScreen } from "@/app/components/profile";
 import type { Profile, ProfileActions } from "@/app/components/profile";
 import styles from "@/app/components/profile/profile.module.css";
-import { ProfileApiError, changePassword, deleteAccount, loadProfile, saveProfile } from "@/lib/profile-api";
+import { ProfileApiError, changePassword, createStore, deleteAccount, loadProfile, saveProfile } from "@/lib/profile-api";
 import { clearSession, readSession, SESSION_CHANGED } from "@/lib/session";
 
 type State = { kind: "loading" } | { kind: "signed-out" } | { kind: "error"; message: string } | { kind: "ready"; profile: Profile };
@@ -58,11 +58,16 @@ export default function ProfilePage() {
   const profile = state.profile;
   const actions: ProfileActions = {
     onSave: data => withSession(async session => { const updated = await saveProfile(session, data); setState({ kind: "ready", profile: updated }); return updated; }),
-    onChangePassword: data => withSession(session => changePassword(session, profile.email, data)),
+    onChangePassword: data => withSession(session => changePassword(session, data)),
     onDeleteAccount: () => withSession(async session => { await deleteAccount(session); clearSession(); router.replace("/login"); }),
+    onCreateStore: data => withSession(async session => {
+      const store = await createStore(session, data);
+      setState({ kind: "ready", profile: { ...profile, stores: [store, ...profile.stores] } });
+      return store;
+    }),
   };
 
-  return <ProfileScreen key={profile.id} profile={profile} products={[]} isOwnProfile avatarEditing={false}
-    emptyProductsMessage="A lista de produtos deste perfil ainda não está disponível."
+  return <ProfileScreen key={profile.id} profile={profile} products={profile.products} isOwnProfile avatarEditing={false}
+    emptyProductsMessage="Nenhum produto cadastrado nas suas lojas."
     {...actions} />;
 }

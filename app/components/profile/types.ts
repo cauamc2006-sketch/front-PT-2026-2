@@ -18,6 +18,14 @@ export interface Product {
   storeName?: string;
   available?: boolean;
   imageRegion?: ImageRegion;
+  images?: Array<{ id: number; urlImagem: string; ordem: number }>;
+}
+
+export interface Store {
+  id: number;
+  name: string;
+  description?: string;
+  logoUrl?: string;
 }
 
 export interface Profile {
@@ -26,6 +34,8 @@ export interface Profile {
   username: string;
   email: string;
   avatarUrl?: string;
+  stores: Store[];
+  products: Product[];
 }
 
 export interface ProfileUpdate {
@@ -45,4 +55,5 @@ export interface ProfileActions {
   onSave: (data: ProfileUpdate) => Promise<Profile>;
   onChangePassword: (data: PasswordChange) => Promise<void>;
   onDeleteAccount: () => Promise<void>;
+  onCreateStore: (data: { name: string; description?: string; logoUrl?: string }) => Promise<Store>;
 }

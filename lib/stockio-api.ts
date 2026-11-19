@@ -2,7 +2,7 @@ import { API_URL } from "./config";
 import { readSession } from "./session";
 
 export type Loja = { id: number; nome: string; descricao?: string | null; logoUrl?: string | null; usuarioId: number };
-export type Comentario = { id: number; conteudo: string; usuarioId: number; avaliacaoLojaId?: number | null; avaliacaoProdutoId?: number | null };
+export type Comentario = { id: number; conteudo: string; usuarioId: number; avaliacaoLojaId?: number | null; avaliacaoProdutoId?: number | null; usuario?: { id: number; nome: string; username: string; fotoPerfilUrl?: string | null } };
 export type CategoriaBackend = {
   id: number;
   nome: string;
@@ -30,9 +30,13 @@ async function request<T>(path: string, init: RequestInit = {}, authenticated = 
     });
   } catch { throw new StockioApiError("Não foi possível conectar ao backend.", 0); }
   if (!response.ok) {
-    const message = response.status === 401 ? "Sessão inválida ou expirada." :
+    let message = response.status === 401 ? "Sessão inválida ou expirada." :
       response.status === 403 ? "Você não tem permissão para esta operação." :
       response.status === 404 ? "Registro não encontrado." : `Erro HTTP ${response.status}.`;
+    try {
+      const body = await response.json() as { message?: string | string[] };
+      if (body.message) message = Array.isArray(body.message) ? body.message.join(" ") : body.message;
+    } catch { /* resposta sem JSON */ }
     throw new StockioApiError(message, response.status);
   }
   if (response.status === 204) return undefined as T;

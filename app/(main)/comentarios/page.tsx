@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { comentariosApi, type Comentario } from "@/lib/stockio-api";
-import { readSession, SESSION_CHANGED } from "@/lib/session";
+import { comentariosApi, StockioApiError, type Comentario } from "@/lib/stockio-api";
+import { clearSession, readSession, SESSION_CHANGED } from "@/lib/session";
 
 type TipoAvaliacao = "produto" | "loja";
 
@@ -51,7 +51,10 @@ export default function ComentariosPage() {
           setErro("");
         }
       } catch (error) {
-        if (ativo) setErro(mensagemErro(error));
+        if (ativo) {
+          if (error instanceof StockioApiError && error.status === 401) { clearSession(); setUsuarioId(null); }
+          setErro(mensagemErro(error));
+        }
       } finally {
         if (ativo) setCarregando(false);
       }
@@ -102,6 +105,7 @@ export default function ComentariosPage() {
       cancelarEdicao();
       carregar();
     } catch (error) {
+      if (error instanceof StockioApiError && error.status === 401) { clearSession(); setUsuarioId(null); }
       setErro(mensagemErro(error));
     } finally {
       setSalvando(false);
@@ -127,6 +131,7 @@ export default function ComentariosPage() {
       setAviso("Comentário excluído.");
       carregar();
     } catch (error) {
+      if (error instanceof StockioApiError && error.status === 401) { clearSession(); setUsuarioId(null); }
       setErro(mensagemErro(error));
     } finally {
       setSalvando(false);
@@ -189,6 +194,7 @@ export default function ComentariosPage() {
               {comentarios.map(comentario => (
                 <article key={comentario.id} className="rounded-3xl bg-white p-6 shadow-sm">
                   <p className="whitespace-pre-wrap break-words">{comentario.conteudo}</p>
+                  {comentario.usuario && <p className="mt-2 text-sm font-semibold">{comentario.usuario.nome} · @{comentario.usuario.username}</p>}
                   <p className="mt-2 text-sm text-gray-500">Comentário #{comentario.id} · {comentario.avaliacaoProdutoId != null ? `Avaliação de produto #${comentario.avaliacaoProdutoId}` : `Avaliação de loja #${comentario.avaliacaoLojaId}`}</p>
                   {usuarioId !== null && Number(comentario.usuarioId) === usuarioId && (
                     <div className="mt-4 flex flex-wrap gap-2">

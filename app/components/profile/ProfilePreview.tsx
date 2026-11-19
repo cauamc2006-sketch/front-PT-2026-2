@@ -8,7 +8,7 @@ import styles from "./profile.module.css";
 
 /** Prévia visual separada do perfil real: nenhuma chamada à API. */
 export function ProfilePreview({ isOwnProfile = true }: { isOwnProfile?: boolean }) {
-  const [profile, setProfile] = useState<Profile>({ id: "preview", name: "Selena Gomez", username: "selenagomez", email: "selenamariagomez@rare.com", avatarUrl: "/stock-profile/avatar-reference.svg" });
+  const [profile, setProfile] = useState<Profile>({ id: "preview", name: "Selena Gomez", username: "selenagomez", email: "selenamariagomez@rare.com", avatarUrl: "/stock-profile/avatar-reference.svg", stores: [], products: beautyProducts });
   const avatar = useRef<string | undefined>(undefined);
   useEffect(() => () => { if (avatar.current) URL.revokeObjectURL(avatar.current); }, []);
   return <>
@@ -24,6 +24,7 @@ export function ProfilePreview({ isOwnProfile = true }: { isOwnProfile?: boolean
         }}
         onChangePassword={async () => { throw new Error("Esta é uma prévia. Altere a senha no seu perfil real."); }}
         onDeleteAccount={async () => { throw new Error("Esta é uma prévia. Nenhuma conta foi excluída."); }}
+        onCreateStore={async () => { throw new Error("Esta é uma prévia. Nenhuma loja foi criada."); }}
       />
     </div>
   </>;
