@@ -79,6 +79,8 @@ function parseProfile(data: unknown, session: ProfileSession): Profile {
       name: store.nome,
       description: "descricao" in store && typeof store.descricao === "string" ? store.descricao : undefined,
       logoUrl: "logoUrl" in store && typeof store.logoUrl === "string" ? store.logoUrl : undefined,
+      bannerUrl: "bannerUrl" in store && typeof store.bannerUrl === "string" ? store.bannerUrl : undefined,
+      stickerUrl: "stickerUrl" in store && typeof store.stickerUrl === "string" ? store.stickerUrl : undefined,
     }];
   });
   const products = rawStores.flatMap(store => {
@@ -118,15 +120,15 @@ export async function changePassword(session: ProfileSession, data: PasswordChan
   await request(`/user/me/password`, session, { method: "PATCH", body: JSON.stringify({ senhaAtual: data.currentPassword, novaSenha: data.newPassword }) });
 }
 
-export async function createStore(session: ProfileSession, data: { name: string; description?: string; logoUrl?: string }): Promise<Store> {
+export async function createStore(session: ProfileSession, data: { name: string; description?: string; logoUrl?: string; bannerUrl?: string; stickerUrl?: string }): Promise<Store> {
   const payload = await readJson(await request('/loja', session, {
     method: 'POST',
-    body: JSON.stringify({ nome: data.name.trim(), descricao: data.description?.trim() || undefined, logoUrl: data.logoUrl?.trim() || undefined }),
+    body: JSON.stringify({ nome: data.name.trim(), descricao: data.description?.trim() || undefined, logoUrl: data.logoUrl?.trim() || undefined, bannerUrl: data.bannerUrl?.trim() || undefined, stickerUrl: data.stickerUrl?.trim() || undefined }),
   }));
   if (!payload || typeof payload !== 'object' || !('id' in payload) || typeof payload.id !== 'number' || !('nome' in payload) || typeof payload.nome !== 'string') {
     throw new ProfileApiError('A loja foi criada, mas a resposta recebida é inválida.', 502);
   }
-  return { id: payload.id, name: payload.nome, description: 'descricao' in payload && typeof payload.descricao === 'string' ? payload.descricao : undefined, logoUrl: 'logoUrl' in payload && typeof payload.logoUrl === 'string' ? payload.logoUrl : undefined };
+  return { id: payload.id, name: payload.nome, description: 'descricao' in payload && typeof payload.descricao === 'string' ? payload.descricao : undefined, logoUrl: 'logoUrl' in payload && typeof payload.logoUrl === 'string' ? payload.logoUrl : undefined, bannerUrl: 'bannerUrl' in payload && typeof payload.bannerUrl === 'string' ? payload.bannerUrl : undefined, stickerUrl: 'stickerUrl' in payload && typeof payload.stickerUrl === 'string' ? payload.stickerUrl : undefined };
 }
 
 export async function deleteAccount(session: ProfileSession): Promise<void> {

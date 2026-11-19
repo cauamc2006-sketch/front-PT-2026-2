@@ -26,6 +26,8 @@ export interface Store {
   name: string;
   description?: string;
   logoUrl?: string;
+  bannerUrl?: string;
+  stickerUrl?: string;
 }
 
 export interface Profile {
@@ -55,5 +57,5 @@ export interface ProfileActions {
   onSave: (data: ProfileUpdate) => Promise<Profile>;
   onChangePassword: (data: PasswordChange) => Promise<void>;
   onDeleteAccount: () => Promise<void>;
-  onCreateStore: (data: { name: string; description?: string; logoUrl?: string }) => Promise<Store>;
+  onCreateStore: (data: { name: string; description?: string; logoUrl?: string; bannerUrl?: string; stickerUrl?: string }) => Promise<Store>;
 }
