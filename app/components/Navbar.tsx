@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link';
 import Image from 'next/image';
-import React, { useSyncExternalStore } from 'react';
+import React, { Suspense, useSyncExternalStore } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { clearSession, readSession, SESSION_CHANGED } from '@/lib/session';
 
@@ -22,7 +22,7 @@ function getServerSessionSnapshot() {
   return false;
 }
 
-export default function Navbar() {
+function NavbarContent() {
   const pathname = usePathname();
   const router = useRouter();
   
@@ -141,5 +141,30 @@ export default function Navbar() {
 
       </div>
     </nav>
+  );
+}
+
+function NavbarFallback() {
+  return (
+    <nav className="bg-[#000000] w-full px-8 py-5 flex items-center justify-between shadow-md h-[83px]">
+      <Link href="/">
+        <Image 
+          src="/logo-branca.png" 
+          alt="STOCK.IO" 
+          width={221} 
+          height={43} 
+          priority
+          className="cursor-pointer hover:opacity-90 transition-opacity"
+        />
+      </Link>
+    </nav>
+  );
+}
+
+export default function Navbar() {
+  return (
+    <Suspense fallback={<NavbarFallback />}>
+      <NavbarContent />
+    </Suspense>
   );
 }

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback, Suspense } from "react";
 import BarraPesquisa from "@/app/components/BarraPesquisa";
 import CardProduto from "@/app/components/CardProduto";
 import { getProducts, formatPrice, type Product } from "@/lib/products";
@@ -36,7 +36,7 @@ const OPCOES_ORDENACAO: OpcaoConfig[] = [
   { id: "disponiveis", label: "Disponíveis primeiro" },
 ];
 
-export default function TelaCategoria() {
+function ConteudoCategoria() {
   const params = useParams();
   const rawParam =
     typeof params?.slug === "string"
@@ -537,5 +537,26 @@ export default function TelaCategoria() {
         )}
       </div>
     </main>
+  );
+}
+
+function TelaCategoriaFallback() {
+  return (
+    <main className="min-h-screen bg-[#F6F3E4]">
+      <section className="bg-black text-white min-h-[220px] md:min-h-[270px] px-8 md:px-16 py-12 flex justify-between items-center relative overflow-hidden">
+        <div className="w-10 h-10 border-4 border-[#6A38F3] border-t-transparent rounded-full animate-spin" />
+      </section>
+      <div className="max-w-7xl mx-auto px-6 md:px-10 py-16 flex justify-center">
+        <p className="font-medium text-gray-500">Carregando categoria...</p>
+      </div>
+    </main>
+  );
+}
+
+export default function TelaCategoria() {
+  return (
+    <Suspense fallback={<TelaCategoriaFallback />}>
+      <ConteudoCategoria />
+    </Suspense>
   );
 }
