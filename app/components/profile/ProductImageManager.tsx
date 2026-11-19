@@ -7,7 +7,7 @@ import styles from "./profile.module.css";
 
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-export function ProductImageManager({ productId, initialImages }: { productId: number; initialImages: PersistedProductImage[] }) {
+export function ProductImageManager({ productId, initialImages, onChange }: { productId: number; initialImages: PersistedProductImage[]; onChange: (images: PersistedProductImage[]) => void }) {
   const [images, setImages] = useState(() => [...initialImages].sort((a, b) => a.ordem - b.ordem));
   const [previews, setPreviews] = useState<string[]>([]);
   const [files, setFiles] = useState<File[]>([]);
@@ -24,6 +24,12 @@ export function ProductImageManager({ productId, initialImages }: { productId: n
     setPreviews([]);
     setFiles([]);
     setReplaceId(undefined);
+  }
+
+  function updateImages(next: PersistedProductImage[]) {
+    const ordered = [...next].sort((a, b) => a.ordem - b.ordem);
+    setImages(ordered);
+    onChange(ordered);
   }
 
   function choose(selected: FileList | null, imageId?: number) {
@@ -54,9 +60,9 @@ export function ProductImageManager({ productId, initialImages }: { productId: n
       const urls = await uploadProductImages(files);
       if (replaceId) {
         const updated = await productImagesApi.replace(productId, replaceId, urls[0]);
-        setImages(current => current.map(image => image.id === replaceId ? updated : image));
+        updateImages(images.map(image => image.id === replaceId ? updated : image));
       } else {
-        setImages(await productImagesApi.add(productId, urls));
+        updateImages(await productImagesApi.add(productId, urls));
       }
       resetSelection();
       setMessage("Galeria atualizada.");
@@ -74,7 +80,7 @@ export function ProductImageManager({ productId, initialImages }: { productId: n
     [next[index], next[target]] = [next[target], next[index]];
     setBusy(true);
     try {
-      setImages(await productImagesApi.reorder(productId, next.map((image, position) => ({ id: image.id, ordem: position + 1 }))));
+      updateImages(await productImagesApi.reorder(productId, next.map((image, position) => ({ id: image.id, ordem: position + 1 }))));
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Não foi possível reordenar.");
     } finally {
@@ -87,7 +93,7 @@ export function ProductImageManager({ productId, initialImages }: { productId: n
     setBusy(true);
     setMessage("");
     try {
-      setImages(await productImagesApi.remove(productId, imageId));
+      updateImages(await productImagesApi.remove(productId, imageId));
       setMessage("Imagem removida.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Não foi possível remover a imagem.");

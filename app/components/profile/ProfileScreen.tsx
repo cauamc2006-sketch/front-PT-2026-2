@@ -20,8 +20,27 @@ export type ProfileScreenProps = ProfileActions & {
   emptyProductsMessage?: string;
 };
 
-type StoreForm = { name: string; description: string; logoUrl: string; bannerUrl: string; stickerUrl: string };
-const EMPTY_STORE: StoreForm = { name: "", description: "", logoUrl: "", bannerUrl: "", stickerUrl: "" };
+type StoreForm = { name: string; description: string; logoFile?: File; bannerFile?: File; stickerFile?: File };
+const EMPTY_STORE: StoreForm = { name: "", description: "" };
+const ACCEPTED_STORE_IMAGES = ["image/jpeg", "image/png", "image/webp"];
+
+function StoreImageInput({ label, file, onChange }: { label: string; file?: File; onChange: (file?: File) => void }) {
+  const [preview, setPreview] = useState<string>();
+  const previewRef = useRef<string | undefined>(undefined);
+  useEffect(() => () => { if (previewRef.current) URL.revokeObjectURL(previewRef.current); }, []);
+  return <label className={styles.storeVisualInput}>
+    <span className={styles.storeVisualPreview}>{preview ? <Image src={preview} alt={`Prévia de ${label.toLowerCase()}`} fill sizes="160px" unoptimized /> : <span aria-hidden="true">＋</span>}</span>
+    <strong>{label}</strong>
+    <small>{file ? file.name : "Selecionar imagem"}</small>
+    <input className={styles.srOnly} type="file" accept="image/jpeg,image/png,image/webp" onChange={event => {
+          const selected = event.target.files?.[0];
+          if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+          previewRef.current = selected ? URL.createObjectURL(selected) : undefined;
+          setPreview(previewRef.current);
+          onChange(selected);
+        }} />
+  </label>;
+}
 
 function CreateStoreDialog({ busy, error, form, onChange, onClose, onSubmit }: { busy: boolean; error: string; form: StoreForm; onChange: (form: StoreForm) => void; onClose: () => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -39,12 +58,9 @@ function CreateStoreDialog({ busy, error, form, onChange, onClose, onSubmit }: {
             <label>Descrição<textarea maxLength={2000} rows={3} placeholder="Conte sobre a sua loja" value={form.description} onChange={event => onChange({ ...form, description: event.target.value })} /></label>
           </div>
           <div className={styles.storeVisuals} aria-label="Identidade visual da loja">
-            {([['logoUrl', 'Logo'], ['bannerUrl', 'Banner'], ['stickerUrl', 'Sticker']] as const).map(([field, label]) => <label key={field}>
-              <span>{label}</span><small>URL da imagem</small>
-              <input type="url" placeholder="https://..." value={form[field]} onChange={event => onChange({ ...form, [field]: event.target.value })} />
-            </label>)}
+            {([['logoFile', 'Logo'], ['bannerFile', 'Banner'], ['stickerFile', 'Sticker']] as const).map(([field, label]) => <StoreImageInput key={field} label={label} file={form[field]} onChange={file => onChange({ ...form, [field]: file })} />)}
           </div>
-          <p className={styles.help}>Categoria não é solicitada porque esse campo não existe no cadastro de loja da API.</p>
+          <p className={styles.storeHelp}>JPG, PNG ou WebP, até 5 MB por imagem. Categoria não é solicitada porque esse campo não existe no cadastro da API.</p>
           {error && <p role="alert" className={styles.error}>{error}</p>}
           <div className={styles.modalActions}><button className={styles.outline} type="button" onClick={onClose}>Cancelar</button><button className={styles.primary} type="submit">{busy ? "Criando…" : "Adicionar loja"}</button></div>
         </fieldset>
@@ -53,7 +69,7 @@ function CreateStoreDialog({ busy, error, form, onChange, onClose, onSubmit }: {
   </dialog>;
 }
 
-function ProductImagesDialog({ product, onClose }: { product: Product; onClose: () => void }) {
+function ProductImagesDialog({ product, onImagesChange, onClose }: { product: Product; onImagesChange: (images: NonNullable<Product["images"]>) => void; onClose: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => { const element = dialog.current; if (element && !element.open) element.showModal(); return () => element?.close(); }, []);
   return <dialog ref={dialog} className={`${styles.dialog} ${styles.productImagesDialog}`} aria-labelledby="product-images-title" onCancel={event => { event.preventDefault(); onClose(); }}>
@@ -61,7 +77,7 @@ function ProductImagesDialog({ product, onClose }: { product: Product; onClose: 
       <button type="button" className={`${styles.iconButton} ${styles.closeButton}`} onClick={onClose} aria-label="Fechar"><Icon name="close" /></button>
       <h2 id="product-images-title" className={styles.modalTitle}>Editar imagens</h2>
       <p className={styles.modalIntro}>{product.name}</p>
-      <ProductImageManager productId={Number(product.id)} initialImages={product.images || []} />
+      <ProductImageManager productId={Number(product.id)} initialImages={product.images || []} onChange={onImagesChange} />
       <button type="button" className={styles.primary} onClick={onClose}>Concluir</button>
     </div>
   </dialog>;
@@ -75,7 +91,8 @@ export function ProfileScreen({ profile, products, isOwnProfile, navbar, backHre
   const [storeForm, setStoreForm] = useState<StoreForm>(EMPTY_STORE);
   const [storeError, setStoreError] = useState("");
   const [storeBusy, setStoreBusy] = useState(false);
-  const [imageProduct, setImageProduct] = useState<Product>();
+  const [imageProductId, setImageProductId] = useState<string>();
+  const imageProduct = products.find(product => product.id === imageProductId);
   const visibleProducts = showAll ? products : products.slice(0, 5);
 
   return <div className={styles.root}>
@@ -103,7 +120,7 @@ export function ProfileScreen({ profile, products, isOwnProfile, navbar, backHre
           <h2 id="stock-products-title">Produtos</h2>
           {products.length > 0 && (allProductsHref ? <a href={allProductsHref}>ver mais</a> : products.length > 5 ? <button type="button" aria-expanded={showAll} onClick={() => setShowAll(!showAll)}>{showAll ? "ver menos" : "ver mais"}</button> : null)}
         </div>
-        {products.length ? <div className={styles.productGrid}>{visibleProducts.map(product => <div key={product.id} className={styles.profileProduct}><CardProduto imagemUrl={product.imageUrl || "/Logo.png"} nome={product.name || "Produto"} preco={`R$ ${product.price || "0,00"}`} lojaLogo={product.storeLogoUrl || "/Logo.png"} />{isOwnProfile && /^\d+$/.test(product.id) && <button type="button" className={styles.manageImagesButton} onClick={() => setImageProduct(product)}>Gerenciar imagens</button>}</div>)}</div> : <p className={styles.empty}>{emptyProductsMessage}</p>}
+        {products.length ? <div className={styles.productGrid}>{visibleProducts.map(product => <div key={product.id} className={styles.profileProduct}><CardProduto imagemUrl={product.imageUrl || "/Logo.png"} nome={product.name || "Produto"} preco={`R$ ${product.price || "0,00"}`} lojaLogo={product.storeLogoUrl || "/Logo.png"} />{isOwnProfile && /^\d+$/.test(product.id) && <button type="button" className={styles.manageImagesButton} onClick={() => setImageProductId(product.id)}>Gerenciar imagens</button>}</div>)}</div> : <p className={styles.empty}>{emptyProductsMessage}</p>}
       </section>
       <p role="status" className={notice ? styles.notice : styles.srOnly}>{notice}</p>
     </main>
@@ -113,11 +130,13 @@ export function ProfileScreen({ profile, products, isOwnProfile, navbar, backHre
           if (storeBusy) return;
           const name = storeForm.name.trim();
           if (!name) { setStoreError("Informe o nome da loja."); return; }
+          const invalidImage = [storeForm.logoFile, storeForm.bannerFile, storeForm.stickerFile].find(file => file && (!ACCEPTED_STORE_IMAGES.includes(file.type) || file.size > 5 * 1024 * 1024));
+          if (invalidImage) { setStoreError("Use imagens JPG, PNG ou WebP de até 5 MB."); return; }
           setStoreBusy(true); setStoreError("");
-          void actions.onCreateStore({ name, description: storeForm.description, logoUrl: storeForm.logoUrl, bannerUrl: storeForm.bannerUrl, stickerUrl: storeForm.stickerUrl }).then(() => {
+          void actions.onCreateStore({ name, description: storeForm.description, logoFile: storeForm.logoFile, bannerFile: storeForm.bannerFile, stickerFile: storeForm.stickerFile }).then(() => {
             setNotice("Loja criada com sucesso."); setCreatingStore(false); setStoreForm(EMPTY_STORE);
           }).catch(error => setStoreError(error instanceof Error ? error.message : "Não foi possível criar a loja.")).finally(() => setStoreBusy(false));
         }} />}
-    {imageProduct && <ProductImagesDialog product={imageProduct} onClose={() => setImageProduct(undefined)} />}
+    {imageProduct && <ProductImagesDialog product={imageProduct} onImagesChange={images => actions.onProductImagesChange(imageProduct.id, images)} onClose={() => setImageProductId(undefined)} />}
   </div>;
 }

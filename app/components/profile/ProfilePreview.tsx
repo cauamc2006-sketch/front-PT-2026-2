@@ -25,6 +25,7 @@ export function ProfilePreview({ isOwnProfile = true }: { isOwnProfile?: boolean
         onChangePassword={async () => { throw new Error("Esta é uma prévia. Altere a senha no seu perfil real."); }}
         onDeleteAccount={async () => { throw new Error("Esta é uma prévia. Nenhuma conta foi excluída."); }}
         onCreateStore={async () => { throw new Error("Esta é uma prévia. Nenhuma loja foi criada."); }}
+        onProductImagesChange={() => { /* Produtos da prévia não são persistidos. */ }}
       />
     </div>
   </>;

@@ -16,7 +16,7 @@ async function request(path: string, session: ProfileSession, options: RequestIn
       ...options,
       cache: "no-store",
       headers: {
-        "Content-Type": "application/json",
+        ...(options.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
         Authorization: `Bearer ${session.token}`,
         ...options.headers,
       },
@@ -118,6 +118,21 @@ export async function saveProfile(session: ProfileSession, data: ProfileUpdate):
 
 export async function changePassword(session: ProfileSession, data: PasswordChange): Promise<void> {
   await request(`/user/me/password`, session, { method: "PATCH", body: JSON.stringify({ senhaAtual: data.currentPassword, novaSenha: data.newPassword }) });
+}
+
+export async function uploadStoreImages(session: ProfileSession, files: File[]): Promise<string[]> {
+  if (!files.length || files.length > 3) throw new ProfileApiError("Selecione de uma a três imagens.", 400);
+  const form = new FormData();
+  files.forEach(file => form.append("files", file));
+  const response = await request("/loja/upload", session, {
+    method: "POST",
+    body: form,
+  });
+  const payload = await readJson(response);
+  if (!payload || typeof payload !== "object" || !("urls" in payload) || !Array.isArray(payload.urls) || payload.urls.some(url => typeof url !== "string")) {
+    throw new ProfileApiError("O upload foi concluído, mas a resposta recebida é inválida.", 502);
+  }
+  return payload.urls;
 }
 
 export async function createStore(session: ProfileSession, data: { name: string; description?: string; logoUrl?: string; bannerUrl?: string; stickerUrl?: string }): Promise<Store> {

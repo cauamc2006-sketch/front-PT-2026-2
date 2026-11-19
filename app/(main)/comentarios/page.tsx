@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useCallback, useEffect, useState, type FormEvent } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import { comentariosApi, StockioApiError, type Comentario } from "@/lib/stockio-api";
 import { clearSession, readSession, SESSION_CHANGED } from "@/lib/session";
@@ -21,11 +21,12 @@ function ComentariosContent() {
   const searchParams = useSearchParams();
   const lojaContextId = idPositivo(searchParams.get("avaliacaoLojaId") ?? "");
   const produtoContextId = idPositivo(searchParams.get("avaliacaoProdutoId") ?? "");
-  const contextoInicial = lojaContextId ? { tipo: "loja" as const, id: lojaContextId } : produtoContextId ? { tipo: "produto" as const, id: produtoContextId } : null;
+  const contextoTipo: TipoAvaliacao | null = lojaContextId ? "loja" : produtoContextId ? "produto" : null;
+  const contextoId = lojaContextId ?? produtoContextId;
   const [comentarios, setComentarios] = useState<Comentario[]>([]);
   const [usuarioId, setUsuarioId] = useState<number | null>(() => readSession()?.userId ?? null);
-  const [tipo, setTipo] = useState<TipoAvaliacao>(contextoInicial?.tipo ?? "produto");
-  const [avaliacaoId, setAvaliacaoId] = useState(contextoInicial ? String(contextoInicial.id) : "");
+  const [tipo, setTipo] = useState<TipoAvaliacao>("produto");
+  const [avaliacaoId, setAvaliacaoId] = useState("");
   const [conteudo, setConteudo] = useState("");
   const [editando, setEditando] = useState<number | null>(null);
   const [carregando, setCarregando] = useState(true);
@@ -33,7 +34,11 @@ function ComentariosContent() {
   const [erro, setErro] = useState("");
   const [aviso, setAviso] = useState("");
   const [reload, setReload] = useState(0);
-  const contextual = contextoInicial !== null;
+  const formSection = useRef<HTMLElement>(null);
+  const commentField = useRef<HTMLTextAreaElement>(null);
+  const contextual = contextoTipo !== null && contextoId !== null;
+  const tipoAtivo = contextoTipo ?? tipo;
+  const avaliacaoIdAtivo = contextoId ? String(contextoId) : avaliacaoId;
 
   const carregar = useCallback(() => {
     setCarregando(true);
@@ -45,12 +50,12 @@ function ComentariosContent() {
 
     async function buscar() {
       try {
-        const id = avaliacaoId.trim() ? idPositivo(avaliacaoId) : null;
-        if (avaliacaoId.trim() && id === null) {
+        const id = avaliacaoIdAtivo.trim() ? idPositivo(avaliacaoIdAtivo) : null;
+        if (avaliacaoIdAtivo.trim() && id === null) {
           if (ativo) setErro("O ID da avaliação deve ser um número inteiro positivo.");
           return;
         }
-        const filtro = id === null ? undefined : tipo === "produto" ? { avaliacaoProdutoId: id } : { avaliacaoLojaId: id };
+        const filtro = id === null ? undefined : tipoAtivo === "produto" ? { avaliacaoProdutoId: id } : { avaliacaoLojaId: id };
         const data = await comentariosApi.listar(filtro);
         if (ativo) {
           setComentarios(data);
@@ -77,7 +82,13 @@ function ComentariosContent() {
       window.removeEventListener(SESSION_CHANGED, atualizarSessao);
       window.removeEventListener("storage", atualizarSessao);
     };
-  }, [tipo, avaliacaoId, reload]);
+  }, [tipoAtivo, avaliacaoIdAtivo, reload]);
+
+  useEffect(() => {
+    if (editando === null) return;
+    formSection.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    commentField.current?.focus({ preventScroll: true });
+  }, [editando]);
 
   function cancelarEdicao() {
     setEditando(null);
@@ -91,7 +102,7 @@ function ComentariosContent() {
     const texto = conteudo.trim();
     if (!texto) { setErro("Escreva o comentário."); return; }
     if (usuarioId === null) { setErro("Entre na sua conta para comentar."); return; }
-    const id = idPositivo(avaliacaoId);
+    const id = idPositivo(avaliacaoIdAtivo);
     if (editando === null && id === null) {
       setErro("Informe o ID de uma avaliação existente (não o ID do produto ou loja).");
       return;
@@ -101,7 +112,7 @@ function ComentariosContent() {
       if (editando === null && id !== null) {
         await comentariosApi.criar({
           conteudo: texto,
-          ...(tipo === "produto" ? { avaliacaoProdutoId: id } : { avaliacaoLojaId: id }),
+          ...(tipoAtivo === "produto" ? { avaliacaoProdutoId: id } : { avaliacaoLojaId: id }),
         });
         setAviso("Comentário cadastrado.");
       } else if (editando !== null) {
@@ -123,7 +134,6 @@ function ComentariosContent() {
     setConteudo(comentario.conteudo);
     setErro("");
     setAviso("");
-    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   async function excluir(comentario: Comentario) {
@@ -182,11 +192,11 @@ function ComentariosContent() {
         </div>}
       </section>
 
-      {usuarioId !== null ? <section className="rounded-3xl bg-white p-6 shadow-sm">
+      {usuarioId !== null ? <section ref={formSection} className="rounded-3xl bg-white p-6 shadow-sm">
         <h2 className="text-lg font-semibold">{editando === null ? "Adicionar comentário" : "Editar comentário"}</h2>
         <form onSubmit={salvar} className="mt-4">
           <label htmlFor="conteudo" className="sr-only">Comentário</label>
-          <textarea id="conteudo" required maxLength={2000} rows={editando === null ? 2 : 5} value={conteudo} onChange={event => setConteudo(event.target.value)} className="w-full resize-y rounded-2xl border border-gray-200 bg-[#F6F3E4] p-4 outline-none focus:border-[#6A38F3]" placeholder="Adicione um comentário..." />
+          <textarea ref={commentField} id="conteudo" required maxLength={2000} rows={editando === null ? 2 : 5} value={conteudo} onChange={event => setConteudo(event.target.value)} className="w-full resize-y rounded-2xl border border-gray-200 bg-[#F6F3E4] p-4 outline-none focus:border-[#6A38F3]" placeholder="Adicione um comentário..." />
           <div className="mt-3 flex justify-end gap-3">{editando !== null && <button type="button" onClick={cancelarEdicao} className="rounded-full border border-gray-300 px-5 py-2">Cancelar</button>}<button type="submit" disabled={salvando || (!contextual && !idPositivo(avaliacaoId))} className="rounded-full bg-[#6A38F3] px-6 py-2 font-semibold text-white disabled:opacity-50">{salvando ? "Salvando..." : editando === null ? "Comentar" : "Salvar"}</button></div>
         </form>
       </section> : <div className="rounded-3xl bg-white p-6 text-center">Para comentar, <Link href="/login" className="font-semibold text-[#6A38F3]">faça login</Link>.</div>}

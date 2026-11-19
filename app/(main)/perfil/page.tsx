@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ProfileScreen } from "@/app/components/profile";
 import type { Profile, ProfileActions } from "@/app/components/profile";
 import styles from "@/app/components/profile/profile.module.css";
-import { ProfileApiError, changePassword, createStore, deleteAccount, loadProfile, saveProfile } from "@/lib/profile-api";
+import { ProfileApiError, changePassword, createStore, deleteAccount, loadProfile, saveProfile, uploadStoreImages } from "@/lib/profile-api";
 import { clearSession, readSession, SESSION_CHANGED } from "@/lib/session";
 
 type State = { kind: "loading" } | { kind: "signed-out" } | { kind: "error"; message: string } | { kind: "ready"; profile: Profile };
@@ -61,10 +61,26 @@ export default function ProfilePage() {
     onChangePassword: data => withSession(session => changePassword(session, data)),
     onDeleteAccount: () => withSession(async session => { await deleteAccount(session); clearSession(); router.replace("/login"); }),
     onCreateStore: data => withSession(async session => {
-      const store = await createStore(session, data);
-      setState({ kind: "ready", profile: { ...profile, stores: [store, ...profile.stores] } });
+      const selected = [
+        ["logoUrl", data.logoFile],
+        ["bannerUrl", data.bannerFile],
+        ["stickerUrl", data.stickerFile],
+      ] as const;
+      const files = selected.flatMap(([, file]) => file ? [file] : []);
+      const urls = files.length ? await uploadStoreImages(session, files) : [];
+      let urlIndex = 0;
+      const uploaded = Object.fromEntries(selected.flatMap(([field, file]) => file ? [[field, urls[urlIndex++]]] : []));
+      const store = await createStore(session, { name: data.name, description: data.description, ...uploaded });
+      setState(current => current.kind === "ready" ? { kind: "ready", profile: { ...current.profile, stores: [store, ...current.profile.stores] } } : current);
       return store;
     }),
+    onProductImagesChange: (productId, images) => setState(current => current.kind === "ready" ? {
+      kind: "ready",
+      profile: {
+        ...current.profile,
+        products: current.profile.products.map(product => product.id === productId ? { ...product, images, imageUrl: images[0]?.urlImagem } : product),
+      },
+    } : current),
   };
 
   return <ProfileScreen key={profile.id} profile={profile} products={profile.products} isOwnProfile avatarEditing={false}
