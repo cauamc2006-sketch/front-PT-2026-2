@@ -6,6 +6,7 @@ interface CardProdutoProps {
   preco: string;
   lojaLogo?: string | null;
   disponivel?: boolean;
+  statusLayout?: 'inline' | 'stack';
 }
 
 export default function CardProduto({
@@ -14,6 +15,7 @@ export default function CardProduto({
   preco,
   lojaLogo,
   disponivel = true,
+  statusLayout = 'inline',
 }: CardProdutoProps) {
   const safeLojaLogo = lojaLogo && lojaLogo.trim() ? lojaLogo : '/Logo.png';
   const safeImagemUrl = imagemUrl && imagemUrl.trim() ? imagemUrl : '/Logo.png';
@@ -41,21 +43,43 @@ export default function CardProduto({
         />
       </div>
 
-      <h3 className="font-bold text-gray-900 text-sm leading-snug truncate" title={nome}>
-        {nome}
-      </h3>
-      <div className="mt-0.5">
-        <span className="font-bold text-gray-900 text-sm">{preco}</span>
-      </div>
-      <div className="mt-0.5">
-        <span
-          className={`text-[10px] font-black uppercase tracking-wider ${
-            disponivel ? "text-[#84CC16]" : "text-[#EF4444]"
-          }`}
-        >
-          {disponivel ? "DISPONÍVEL" : "INDISPONÍVEL"}
-        </span>
-      </div>
+      {statusLayout === 'stack' ? (
+        <>
+          <h3 className="font-semibold text-gray-800 text-[20px] mb-1 truncate" title={nome}>
+            {nome}
+          </h3>
+          <div className="flex flex-col items-start gap-0.5">
+            <span className="font-bold text-gray-900">{preco}</span>
+            {disponivel ? (
+              <span className="text-[17px] text-green-600 font-semibold">
+                Disponível
+              </span>
+            ) : (
+              <span className="text-[17px] text-red-600 font-semibold">
+                Indisponível
+              </span>
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          <h3 className="font-bold text-gray-900 text-sm leading-snug truncate" title={nome}>
+            {nome}
+          </h3>
+          <div className="mt-0.5">
+            <span className="font-bold text-gray-900 text-sm">{preco}</span>
+          </div>
+          <div className="mt-0.5">
+            <span
+              className={`text-[10px] font-black uppercase tracking-wider ${
+                disponivel ? "text-[#84CC16]" : "text-[#EF4444]"
+              }`}
+            >
+              {disponivel ? "DISPONÍVEL" : "INDISPONÍVEL"}
+            </span>
+          </div>
+        </>
+      )}
     </div>
   );
 }

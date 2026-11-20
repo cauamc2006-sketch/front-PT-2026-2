@@ -4,6 +4,7 @@ import { readSession } from "./session";
 
 export type Product = {
   id: number;
+  lojaId?: number;
   nome: string;
   descricao?: string | null;
   preco: string | number;
@@ -54,6 +55,7 @@ export function parseProducts(payload: unknown): Product[] {
     const categoria = isRecord(entry.categoria) ? entry.categoria : null;
     return {
       id: entry.id,
+      ...(typeof entry.lojaId === "number" ? { lojaId: entry.lojaId } : {}),
       nome: entry.nome,
       descricao: typeof entry.descricao === "string" ? entry.descricao : null,
       preco: entry.preco,
@@ -75,11 +77,12 @@ export function parseProducts(payload: unknown): Product[] {
   });
 }
 
-export async function getProducts(signal?: AbortSignal): Promise<Product[]> {
+export async function getProducts(signal?: AbortSignal, lojaId?: number): Promise<Product[]> {
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const query = lojaId !== undefined ? `?lojaId=${lojaId}` : "";
   let response: Response;
   try {
-    response = await fetch(`${API_URL}/produto`, {
+    response = await fetch(`${API_URL}/produto${query}`, {
       signal,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       cache: "no-store",
