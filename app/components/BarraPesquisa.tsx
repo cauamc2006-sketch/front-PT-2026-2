@@ -4,6 +4,7 @@ import Image from "next/image";
 import { type ChangeEvent, type FormEvent } from "react";
 
 export interface BarraPesquisaProps {
+  id?: string;
   value: string;
   onChange: (value: string) => void;
   onSubmit?: () => void;
@@ -13,6 +14,7 @@ export interface BarraPesquisaProps {
 }
 
 export default function BarraPesquisa({
+  id = "barra-pesquisa-input",
   value,
   onChange,
   onSubmit,
@@ -37,11 +39,11 @@ export default function BarraPesquisa({
       onSubmit={handleSubmit}
       className={`bg-white rounded-full flex items-center w-full max-w-3xl px-6 py-3 shadow-md border border-transparent focus-within:border-purple-300 focus-within:shadow-lg transition-all ${className}`}
     >
-      <label htmlFor="barra-pesquisa-input" className="sr-only">
+      <label htmlFor={id} className="sr-only">
         {placeholder}
       </label>
       <input
-        id="barra-pesquisa-input"
+        id={id}
         type="search"
         value={value}
         onChange={handleChange}

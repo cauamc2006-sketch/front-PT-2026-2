@@ -74,9 +74,43 @@ export const CATEGORIAS: CategoriaInfo[] = [
   },
 ];
 
-export function getCategoriaPorSlug(slug: string): CategoriaInfo | undefined {
-  const normalizado = slug.toLowerCase().trim();
-  return CATEGORIAS.find(
-    (c) => c.slug === normalizado || c.nome.toLowerCase() === normalizado
-  );
+export function getCategoriaPorSlug(slugOrName: string): CategoriaInfo | undefined {
+  if (!slugOrName) return undefined;
+  const normalizado = slugOrName
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+
+  const aliasMap: Record<string, string> = {
+    roupas: "moda",
+    vestuario: "moda",
+    games: "jogos",
+    lojas: "jogos",
+    eletronico: "eletronicos",
+    eletronicos: "eletronicos",
+    farmacia: "farmacia",
+    brinquedo: "brinquedos",
+    brinquedos: "brinquedos",
+  };
+
+  const chave = aliasMap[normalizado] || normalizado;
+
+  return CATEGORIAS.find((c) => {
+    const cSlugNorm = c.slug
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+    const cNomeNorm = c.nome
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+
+    return (
+      cSlugNorm === chave ||
+      cNomeNorm === chave ||
+      cSlugNorm === normalizado ||
+      cNomeNorm === normalizado
+    );
+  });
 }
