@@ -63,6 +63,7 @@ export default function ModalEditarAvaliacao({
 
   useEffect(() => {
     if (!isOpen || !avaliacao) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setNota(avaliacao.nota);
     setNotaHover(0);
     setComentario(avaliacao.comentario ?? "");

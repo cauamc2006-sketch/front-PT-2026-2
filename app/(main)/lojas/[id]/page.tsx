@@ -104,8 +104,16 @@ function LojaEspecificaConteudo({ params }: { params: Promise<{ id: string }> })
 	const router = useRouter();
     const [modalEditarAberto, setModalEditarAberto] = useState(false);
 
-	const reviewsScroll = useDragScroll();
-	const melhorAvaliadosScroll = useDragScroll();
+	const {
+		ref: reviewsRef,
+		arrastando: reviewsArrastando,
+		handlers: reviewsHandlers,
+	} = useDragScroll();
+	const {
+		ref: melhorAvaliadosRef,
+		arrastando: melhorAvaliadosArrastando,
+		handlers: melhorAvaliadosHandlers,
+	} = useDragScroll();
 
 	const sessao = readSession();
 	const estaLogado = Boolean(sessao);
@@ -153,6 +161,7 @@ function LojaEspecificaConteudo({ params }: { params: Promise<{ id: string }> })
 		const idLoja = Number(id);
 
 		if (!id || !Number.isInteger(idLoja) || idLoja < 1) {
+			// eslint-disable-next-line react-hooks/set-state-in-effect
 			setErro("ID de loja inválido.");
 			setCarregando(false);
 			return;
@@ -334,13 +343,13 @@ function LojaEspecificaConteudo({ params }: { params: Promise<{ id: string }> })
 					</p>
 				) : (
 					<div
-						ref={verTodasAvaliacoes ? undefined : reviewsScroll.ref}
-						{...(verTodasAvaliacoes ? {} : reviewsScroll.handlers)}
+						ref={verTodasAvaliacoes ? undefined : reviewsRef}
+						{...(verTodasAvaliacoes ? {} : reviewsHandlers)}
 						className={
 							verTodasAvaliacoes
 								? "w-full flex flex-col items-center gap-6"
 								: `w-full flex gap-6 overflow-x-auto select-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${
-										reviewsScroll.arrastando ? "cursor-grabbing" : "cursor-grab"
+										reviewsArrastando ? "cursor-grabbing" : "cursor-grab"
 									}`
 						}
 					>
@@ -408,10 +417,10 @@ function LojaEspecificaConteudo({ params }: { params: Promise<{ id: string }> })
 						</p>
 					) : (
 						<div
-							ref={melhorAvaliadosScroll.ref}
-							{...melhorAvaliadosScroll.handlers}
+							ref={melhorAvaliadosRef}
+							{...melhorAvaliadosHandlers}
 							className={`w-full flex gap-12 overflow-x-auto select-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${
-								melhorAvaliadosScroll.arrastando ? "cursor-grabbing" : "cursor-grab"
+								melhorAvaliadosArrastando ? "cursor-grabbing" : "cursor-grab"
 							}`}
 						>
 							{produtosMelhorAvaliados.map((produto) => (

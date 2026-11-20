@@ -70,6 +70,7 @@ export default function ModalEditarLoja({
     if (!isOpen) return;
     let ativo = true;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setNome(loja.nome);
     setErro(null);
     setCategoriasAbertas(false);

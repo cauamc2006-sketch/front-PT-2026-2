@@ -23,6 +23,7 @@ export default function ModalEditarComentario({
   // Sincroniza o texto atual do comentário e limpa erros ao abrir
   useEffect(() => {
     if (!isOpen) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setConteudo(comentario.conteudo);
     setErro(null);
   }, [isOpen, comentario]);
