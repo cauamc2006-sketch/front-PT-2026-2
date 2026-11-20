@@ -44,8 +44,7 @@ export default function ModalEditarLoja({
   const [categoriasAbertas, setCategoriasAbertas] = useState(false);
   const [categoriaSelecionada, setCategoriaSelecionada] =
     useState<Categoria | null>(null);
-
-  // Arquivos e prévias das 3 imagens
+    
   const [fotoPerfil, setFotoPerfil] = useState<File | null>(null);
   const [previewFotoPerfil, setPreviewFotoPerfil] = useState<string | null>(
     null
@@ -69,8 +68,6 @@ export default function ModalEditarLoja({
   useEffect(() => {
     if (!isOpen) return;
     let ativo = true;
-
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setNome(loja.nome);
     setErro(null);
     setCategoriasAbertas(false);

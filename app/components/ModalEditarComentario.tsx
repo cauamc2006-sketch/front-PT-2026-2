@@ -20,10 +20,8 @@ export default function ModalEditarComentario({
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
-  // Sincroniza o texto atual do comentário e limpa erros ao abrir
   useEffect(() => {
     if (!isOpen) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setConteudo(comentario.conteudo);
     setErro(null);
   }, [isOpen, comentario]);
