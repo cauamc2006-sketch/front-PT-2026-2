@@ -200,6 +200,7 @@ export default function Feed() {
 
                 return (
                   <CardProduto
+                    produtoId={p.id}
                     key={p.id}
                     imagemUrl={firstImage}
                     nome={p.nome}

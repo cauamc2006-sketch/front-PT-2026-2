@@ -72,7 +72,8 @@ async function request<T>(path: string, init: RequestInit = {}, authenticated = 
         ...init.headers,
       },
     });
-  } catch {
+  } catch (error) {
+    if (init.signal?.aborted) throw error;
     throw new StockioApiError("Não foi possível conectar ao backend.", 0);
   }
   if (!response.ok) {
@@ -189,15 +190,25 @@ export const avaliacoesLojaApi = {
 };
 
 export const avaliacoesProdutoApi = {
-  listar: (filtro?: { produtoId?: number; usuarioId?: number }) => {
+  listar: (filtro?: { produtoId?: number; usuarioId?: number }, signal?: AbortSignal) => {
     const params = new URLSearchParams();
     if (filtro?.produtoId) params.set("produtoId", String(filtro.produtoId));
     if (filtro?.usuarioId) params.set("usuarioId", String(filtro.usuarioId));
-    return request<AvaliacaoProduto[]>(`/avaliacao-produto${params.size ? `?${params}` : ""}`);
+    return request<AvaliacaoProduto[]>(`/avaliacao-produto${params.size ? `?${params}` : ""}`, { signal });
   },
 };
 
+type ProdutoEdicao = { nome: string; descricao: string; preco: number; estoque: number; categoriaId?: number };
+
 export const produtosApi = {
+  buscar: async (id: number, signal?: AbortSignal) =>
+    parseProducts([await request<unknown>(`/produto/${id}`, { signal })])[0],
+  atualizar: async (id: number, data: ProdutoEdicao) =>
+    parseProducts([await request<unknown>(`/produto/${id}`, {
+      method: "PATCH",
+      body: json(data),
+    }, true)])[0],
+  excluir: (id: number) => request<unknown>(`/produto/${id}`, { method: "DELETE" }, true),
   listar: (signal?: AbortSignal, lojaId?: number) => getProducts(signal, lojaId),
   criar: (data: {
     lojaId: number;

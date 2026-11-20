@@ -18,7 +18,7 @@ export type Product = {
     categoriaPaiId?: number | null;
   } | null;
   imagens?: ProductImage[];
-  loja?: { nome?: string; logoUrl?: string } | null;
+  loja?: { nome?: string; logoUrl?: string; usuarioId?: number } | null;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -72,6 +72,7 @@ export function parseProducts(payload: unknown): Product[] {
       loja: loja ? {
         nome: typeof loja.nome === "string" ? loja.nome : undefined,
         logoUrl: typeof loja.logoUrl === "string" ? loja.logoUrl : undefined,
+        usuarioId: typeof loja.usuarioId === "number" ? loja.usuarioId : undefined,
       } : null,
     };
   });
