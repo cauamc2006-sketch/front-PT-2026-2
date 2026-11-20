@@ -46,21 +46,21 @@ async function readJson(response: Response): Promise<unknown> {
   }
 }
 
-function parseProfile(data: unknown, session: ProfileSession): Profile {
+function parseProfile(data: unknown, expectedUserId: number, requireEmail = true): Profile {
   if (
     !data ||
     typeof data !== "object" ||
     !("id" in data) ||
-    Number(data.id) !== session.userId ||
+    Number(data.id) !== expectedUserId ||
     !("nome" in data) ||
     typeof data.nome !== "string" ||
     !("username" in data) ||
     typeof data.username !== "string" ||
-    !("email" in data) ||
-    typeof data.email !== "string"
+    (requireEmail && (!("email" in data) || typeof data.email !== "string"))
   ) {
-    throw new ProfileApiError("Os dados recebidos não correspondem ao seu perfil.", 502);
+    throw new ProfileApiError("Os dados recebidos não correspondem ao perfil esperado.", 502);
   }
+  const email = "email" in data && typeof data.email === "string" ? data.email : "";
   const avatar = "fotoPerfilUrl" in data && typeof data.fotoPerfilUrl === "string" ? data.fotoPerfilUrl : undefined;
   let avatarUrl: string | undefined;
   if (avatar) {
@@ -96,11 +96,29 @@ function parseProfile(data: unknown, session: ProfileSession): Profile {
       return [{ id: String(product.id), name: product.nome, price: "preco" in product ? Number(product.preco) : 0, available: !("ativo" in product) || product.ativo !== false, imageUrl: images[0]?.urlImagem, images, storeName, storeLogoUrl }];
     });
   });
-  return { id: String(data.id), name: data.nome, username: data.username, email: data.email, avatarUrl, stores, products };
+  return { id: String(data.id), name: data.nome, username: data.username, email, avatarUrl, stores, products };
 }
 
 export async function loadProfile(session: ProfileSession, signal?: AbortSignal): Promise<Profile> {
-  return parseProfile(await readJson(await request(`/user/me/profile`, session, { signal })), session);
+  return parseProfile(await readJson(await request(`/user/me/profile`, session, { signal })), session.userId);
+}
+
+export async function loadPublicProfile(userId: number, signal?: AbortSignal): Promise<Profile> {
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}/user/${userId}/profile`, {
+      signal,
+      cache: "no-store",
+    });
+  } catch (error) {
+    if (signal?.aborted) throw error;
+    throw new ProfileApiError("Não foi possível carregar o perfil. Confira a conexão e tente novamente.", 0);
+  }
+  if (!response.ok) {
+    const message = response.status === 404 ? "Usuário não encontrado." : "Não foi possível carregar o perfil.";
+    throw new ProfileApiError(message, response.status);
+  }
+  return parseProfile(await readJson(response), userId, false);
 }
 
 export async function saveProfile(session: ProfileSession, data: ProfileUpdate): Promise<Profile> {
@@ -112,7 +130,7 @@ export async function saveProfile(session: ProfileSession, data: ProfileUpdate):
         body: JSON.stringify({ name: data.name.trim(), username: data.username.trim(), email: data.email.trim() }),
       })
     ),
-    session
+    session.userId
   );
 }
 
