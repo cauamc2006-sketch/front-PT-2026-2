@@ -18,6 +18,16 @@ export interface Product {
   storeName?: string;
   available?: boolean;
   imageRegion?: ImageRegion;
+  images?: Array<{ id: number; urlImagem: string; ordem: number }>;
+}
+
+export interface Store {
+  id: number;
+  name: string;
+  description?: string;
+  logoUrl?: string;
+  bannerUrl?: string;
+  stickerUrl?: string;
 }
 
 export interface Profile {
@@ -26,6 +36,8 @@ export interface Profile {
   username: string;
   email: string;
   avatarUrl?: string;
+  stores: Store[];
+  products: Product[];
 }
 
 export interface ProfileUpdate {
@@ -40,9 +52,19 @@ export interface PasswordChange {
   newPassword: string;
 }
 
+export interface StoreCreate {
+  name: string;
+  description?: string;
+  logoFile?: File;
+  bannerFile?: File;
+  stickerFile?: File;
+}
+
 /** Callbacks devem rejeitar a Promise quando a API falhar. */
 export interface ProfileActions {
   onSave: (data: ProfileUpdate) => Promise<Profile>;
   onChangePassword: (data: PasswordChange) => Promise<void>;
   onDeleteAccount: () => Promise<void>;
+  onCreateStore: (data: StoreCreate) => Promise<Store>;
+  onProductImagesChange: (productId: string, images: NonNullable<Product["images"]>) => void;
 }
