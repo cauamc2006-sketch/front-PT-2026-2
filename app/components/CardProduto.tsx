@@ -1,6 +1,8 @@
 import Image from 'next/image';
+import Link from 'next/link';
 
 interface CardProdutoProps {
+  produtoId?: number;
   imagemUrl?: string | null;
   nome: string;
   preco: string;
@@ -10,6 +12,7 @@ interface CardProdutoProps {
 }
 
 export default function CardProduto({
+  produtoId,
   imagemUrl,
   nome,
   preco,
@@ -21,7 +24,10 @@ export default function CardProduto({
   const safeImagemUrl = imagemUrl && imagemUrl.trim() ? imagemUrl : '/Logo.png';
 
   return (
-    <div className="bg-white rounded-3xl p-4 shadow-sm hover:shadow-md transition-shadow relative w-full max-w-[220px]">
+    <div className="bg-white h-full rounded-3xl p-4 shadow-sm hover:shadow-md transition-shadow relative w-full max-w-[220px]">
+      {produtoId !== undefined && (
+        <Link href={`/produtos/${produtoId}`} className="absolute inset-0 z-20 rounded-3xl focus-visible:outline-2 focus-visible:outline-brand" aria-label={`Ver produto: ${nome}`} />
+      )}
       <div className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm bg-white">
         <Image
           src={safeLojaLogo}

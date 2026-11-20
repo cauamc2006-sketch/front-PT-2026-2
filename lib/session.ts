@@ -57,3 +57,12 @@ export function clearSession(): void {
   }
   window.dispatchEvent(new Event(SESSION_CHANGED));
 }
+
+export function subscribeSession(listener: () => void) {
+  window.addEventListener('storage', listener);
+  window.addEventListener(SESSION_CHANGED, listener);
+  return () => {
+    window.removeEventListener('storage', listener);
+    window.removeEventListener(SESSION_CHANGED, listener);
+  };
+}
