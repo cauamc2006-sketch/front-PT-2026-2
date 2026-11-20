@@ -388,12 +388,13 @@ function LojaEspecificaConteudo({ params }: { params: Promise<{ id: string }> })
 										</p>
 									</div>
 
-									<button
-										type="button"
+									<Link
+										href={`/comentarios?avaliacaoLojaId=${avaliacao.id}`}
+										onMouseDown={(e) => e.stopPropagation()}
 										className="absolute bottom-5 right-8 text-[#6A38F3] text-base font-medium cursor-pointer hover:underline"
 									>
 										ver mais
-									</button>
+									</Link>
 								</div>
 							);
 						})}
