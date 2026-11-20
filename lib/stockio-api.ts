@@ -11,7 +11,16 @@ export type Loja = {
   usuarioId: number;
   usuario?: { id: number; nome?: string | null; username?: string | null; fotoPerfilUrl?: string | null } | null;
 };
-export type Comentario = { id: number; conteudo: string; usuarioId: number; avaliacaoLojaId?: number | null; avaliacaoProdutoId?: number | null };
+
+export type Comentario = {
+  id: number;
+  conteudo: string;
+  usuarioId: number;
+  avaliacaoLojaId?: number | null;
+  avaliacaoProdutoId?: number | null;
+  usuario?: { id: number; nome: string; username: string; fotoPerfilUrl?: string | null };
+};
+
 export type AvaliacaoLoja = {
   id: number;
   usuarioId: number;
@@ -20,6 +29,7 @@ export type AvaliacaoLoja = {
   comentario?: string | null;
   usuario?: { id: number; nome?: string | null; username?: string | null; fotoPerfilUrl?: string | null } | null;
 };
+
 export type AvaliacaoProduto = {
   id: number;
   usuarioId: number;
@@ -27,16 +37,24 @@ export type AvaliacaoProduto = {
   nota: number;
   comentario?: string | null;
 };
-export type Categoria = {
+
+export type CategoriaBackend = {
   id: number;
   nome: string;
   slug: string;
+  descricao?: string | null;
   imagemUrl?: string | null;
   categoriaPaiId?: number | null;
+  subcategorias?: CategoriaBackend[];
 };
 
+export type Categoria = CategoriaBackend;
+
 export class StockioApiError extends Error {
-  constructor(message: string, readonly status: number) { super(message); this.name = "StockioApiError"; }
+  constructor(message: string, readonly status: number) {
+    super(message);
+    this.name = "StockioApiError";
+  }
 }
 
 async function request<T>(path: string, init: RequestInit = {}, authenticated = false): Promise<T> {
@@ -48,9 +66,15 @@ async function request<T>(path: string, init: RequestInit = {}, authenticated = 
     response = await fetch(`${API_URL}${path}`, {
       ...init,
       cache: "no-store",
-      headers: { "Content-Type": "application/json", ...(token && authenticated ? { Authorization: `Bearer ${token}` } : {}), ...init.headers },
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && authenticated ? { Authorization: `Bearer ${token}` } : {}),
+        ...init.headers,
+      },
     });
-  } catch { throw new StockioApiError("Não foi possível conectar ao backend.", 0); }
+  } catch {
+    throw new StockioApiError("Não foi possível conectar ao backend.", 0);
+  }
   if (!response.ok) {
     let apiMessage = "";
     try {
@@ -78,6 +102,7 @@ async function request<T>(path: string, init: RequestInit = {}, authenticated = 
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
 }
+
 const json = (value: unknown) => JSON.stringify(value);
 
 async function uploadFiles(path: string, files: File[]): Promise<string[]> {
@@ -113,13 +138,21 @@ async function uploadFiles(path: string, files: File[]): Promise<string[]> {
 export const lojasApi = {
   listar: () => request<Loja[]>("/loja"),
   buscar: (id: number) => request<Loja>(`/loja/${id}`),
-  criar: (data: { nome: string; descricao?: string; logoUrl?: string }) => request<Loja>("/loja", { method: "POST", body: json(data) }, true),
+  criar: (data: { nome: string; descricao?: string; logoUrl?: string }) =>
+    request<Loja>("/loja", { method: "POST", body: json(data) }, true),
   atualizar: (
     id: number,
     data: Partial<{ nome: string; descricao: string; logoUrl: string; bannerUrl: string; stickerUrl: string }>,
   ) => request<Loja>(`/loja/${id}`, { method: "PATCH", body: json(data) }, true),
   excluir: (id: number) => request<Loja>(`/loja/${id}`, { method: "DELETE" }, true),
   uploadImagens: (files: File[]) => uploadFiles("/loja/upload", files),
+};
+
+export const categoriasApi = {
+  listar: (raiz?: boolean) => request<CategoriaBackend[]>(`/categorias${raiz ? "?raiz=true" : ""}`),
+  buscar: (id: number) => request<CategoriaBackend>(`/categorias/${id}`),
+  buscarSubcategorias: (categoriaPaiId: number) =>
+    request<CategoriaBackend[]>(`/categorias?categoriaPaiId=${categoriaPaiId}`),
 };
 
 export const comentariosApi = {
@@ -130,8 +163,10 @@ export const comentariosApi = {
     return request<Comentario[]>(`/comentarios${params.size ? `?${params}` : ""}`);
   },
   buscar: (id: number) => request<Comentario>(`/comentarios/${id}`),
-  criar: (data: { conteudo: string; avaliacaoLojaId?: number; avaliacaoProdutoId?: number }) => request<Comentario>("/comentarios", { method: "POST", body: json(data) }, true),
-  atualizar: (id: number, conteudo: string) => request<Comentario>(`/comentarios/${id}`, { method: "PATCH", body: json({ conteudo }) }, true),
+  criar: (data: { conteudo: string; avaliacaoLojaId?: number; avaliacaoProdutoId?: number }) =>
+    request<Comentario>("/comentarios", { method: "POST", body: json(data) }, true),
+  atualizar: (id: number, conteudo: string) =>
+    request<Comentario>(`/comentarios/${id}`, { method: "PATCH", body: json({ conteudo }) }, true),
   excluir: (id: number) => request<Comentario>(`/comentarios/${id}`, { method: "DELETE" }, true),
 };
 
@@ -160,10 +195,6 @@ export const avaliacoesProdutoApi = {
     if (filtro?.usuarioId) params.set("usuarioId", String(filtro.usuarioId));
     return request<AvaliacaoProduto[]>(`/avaliacao-produto${params.size ? `?${params}` : ""}`);
   },
-};
-
-export const categoriasApi = {
-  listar: () => request<Categoria[]>("/categorias"),
 };
 
 export const produtosApi = {

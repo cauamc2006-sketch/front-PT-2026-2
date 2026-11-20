@@ -1,5 +1,6 @@
 import type { ProductImage } from "@/app/components/ProductImageCard";
 import { API_URL } from "./config";
+import { readSession } from "./session";
 
 export type Product = {
   id: number;
@@ -9,6 +10,13 @@ export type Product = {
   preco: string | number;
   estoque: number;
   ativo?: boolean;
+  categoriaId?: number;
+  categoria?: {
+    id: number;
+    nome: string;
+    slug: string;
+    categoriaPaiId?: number | null;
+  } | null;
   imagens?: ProductImage[];
   loja?: { nome?: string; logoUrl?: string } | null;
 };
@@ -44,6 +52,7 @@ export function parseProducts(payload: unknown): Product[] {
       throw new Error(`Produto ${index + 1} com formato inválido na resposta da API.`);
     }
     const loja = isRecord(entry.loja) ? entry.loja : null;
+    const categoria = isRecord(entry.categoria) ? entry.categoria : null;
     return {
       id: entry.id,
       ...(typeof entry.lojaId === "number" ? { lojaId: entry.lojaId } : {}),
@@ -52,6 +61,13 @@ export function parseProducts(payload: unknown): Product[] {
       preco: entry.preco,
       estoque: entry.estoque,
       ativo: typeof entry.ativo === "boolean" ? entry.ativo : true,
+      categoriaId: typeof entry.categoriaId === "number" ? entry.categoriaId : undefined,
+      categoria: categoria ? {
+        id: typeof categoria.id === "number" ? categoria.id : 0,
+        nome: typeof categoria.nome === "string" ? categoria.nome : "",
+        slug: typeof categoria.slug === "string" ? categoria.slug : "",
+        categoriaPaiId: typeof categoria.categoriaPaiId === "number" ? categoria.categoriaPaiId : null,
+      } : null,
       imagens: parseImages(entry.imagens),
       loja: loja ? {
         nome: typeof loja.nome === "string" ? loja.nome : undefined,
@@ -88,3 +104,36 @@ export function formatPrice(value: Product["preco"]): string {
     ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(number)
     : "Preço indisponível";
 }
+
+export type PersistedProductImage = { id: number; produtoId?: number; urlImagem: string; ordem: number };
+
+async function productImageRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const session = readSession();
+  if (!session) throw new Error("Entre novamente para gerenciar imagens.");
+  const response = await fetch(`${API_URL}${path}`, {
+    ...init,
+    cache: "no-store",
+    headers: { Authorization: `Bearer ${session.token}`, ...(init.body instanceof FormData ? {} : { "Content-Type": "application/json" }), ...init.headers },
+  });
+  if (!response.ok) {
+    let message = response.status === 401 ? "Sua sessão expirou. Entre novamente." : response.status === 403 ? "Você não tem permissão para alterar este produto." : `Não foi possível gerenciar as imagens (HTTP ${response.status}).`;
+    try { const body = await response.json() as { message?: string | string[] }; if (body.message) message = Array.isArray(body.message) ? body.message.join(" ") : body.message; } catch { /* resposta sem JSON */ }
+    throw new Error(message);
+  }
+  return response.json() as Promise<T>;
+}
+
+export async function uploadProductImages(files: File[]): Promise<string[]> {
+  if (!files.length || files.length > 4) throw new Error("Selecione de 1 a 4 imagens.");
+  const form = new FormData();
+  files.forEach(file => form.append("files", file));
+  const result = await productImageRequest<{ urls: string[] }>("/produto/upload", { method: "POST", body: form });
+  return result.urls;
+}
+
+export const productImagesApi = {
+  add: (productId: number, urls: string[]) => productImageRequest<PersistedProductImage[]>(`/produto/${productId}/imagens`, { method: "POST", body: JSON.stringify({ urls }) }),
+  replace: (productId: number, imageId: number, urlImagem: string) => productImageRequest<PersistedProductImage>(`/produto/${productId}/imagens/${imageId}`, { method: "PATCH", body: JSON.stringify({ urlImagem }) }),
+  remove: (productId: number, imageId: number) => productImageRequest<PersistedProductImage[]>(`/produto/${productId}/imagens/${imageId}`, { method: "DELETE" }),
+  reorder: (productId: number, imagens: Array<{ id: number; ordem: number }>) => productImageRequest<PersistedProductImage[]>(`/produto/${productId}/imagens/reordenar`, { method: "PATCH", body: JSON.stringify({ imagens }) }),
+};

@@ -43,31 +43,43 @@ export default function CardProduto({
         />
       </div>
 
-      <h3 className="font-semibold text-gray-800 text-[20px] mb-1 truncate" title={nome}>
-        {nome}
-      </h3>
-      <div className={statusLayout === 'stack' ? 'flex flex-col items-start gap-0.5' : 'flex items-center gap-2'}>
-        <span className="font-bold text-gray-900">{preco}</span>
-        {statusLayout === 'stack' ? (
-          disponivel ? (
-            <span className="text-[17px] text-green-600 font-semibold">
-              Disponível
+      {statusLayout === 'stack' ? (
+        <>
+          <h3 className="font-semibold text-gray-800 text-[20px] mb-1 truncate" title={nome}>
+            {nome}
+          </h3>
+          <div className="flex flex-col items-start gap-0.5">
+            <span className="font-bold text-gray-900">{preco}</span>
+            {disponivel ? (
+              <span className="text-[17px] text-green-600 font-semibold">
+                Disponível
+              </span>
+            ) : (
+              <span className="text-[17px] text-red-600 font-semibold">
+                Indisponível
+              </span>
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          <h3 className="font-bold text-gray-900 text-sm leading-snug truncate" title={nome}>
+            {nome}
+          </h3>
+          <div className="mt-0.5">
+            <span className="font-bold text-gray-900 text-sm">{preco}</span>
+          </div>
+          <div className="mt-0.5">
+            <span
+              className={`text-[10px] font-black uppercase tracking-wider ${
+                disponivel ? "text-[#84CC16]" : "text-[#EF4444]"
+              }`}
+            >
+              {disponivel ? "DISPONÍVEL" : "INDISPONÍVEL"}
             </span>
-          ) : (
-            <span className="text-[17px] text-red-600 font-semibold">
-              Indisponível
-            </span>
-          )
-        ) : disponivel ? (
-          <span className="text-[10px] text-green-600 font-bold bg-green-100 px-1.5 py-0.5 rounded uppercase">
-            Disponível
-          </span>
-        ) : (
-          <span className="text-[10px] text-gray-500 font-bold bg-gray-100 px-1.5 py-0.5 rounded uppercase">
-            Sem estoque
-          </span>
-        )}
-      </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
