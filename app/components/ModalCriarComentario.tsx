@@ -28,6 +28,7 @@ export default function ModalCriarComentario({
   }
 
   function handleFechar() {
+    if (enviando) return;
     limparFormulario();
     onClose();
   }
@@ -74,6 +75,7 @@ export default function ModalCriarComentario({
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
       onClick={handleFechar}
+      role="presentation"
     >
       <form
         onSubmit={handleSubmit}
@@ -84,6 +86,7 @@ export default function ModalCriarComentario({
         <button
           type="button"
           onClick={handleFechar}
+          disabled={enviando}
           className="absolute top-5 right-7 text-3xl font-light text-black hover:text-[#6A38F3] transition-colors cursor-pointer"
           aria-label="Fechar modal"
         >
@@ -92,6 +95,11 @@ export default function ModalCriarComentario({
 
         {/* Campo de Comentário */}
         <textarea
+          id="novo-comentario"
+          aria-label="Comentário"
+          required
+          maxLength={2000}
+          disabled={enviando}
           value={conteudo}
           onChange={(e) => setConteudo(e.target.value)}
           placeholder="Comentário"
@@ -115,7 +123,7 @@ export default function ModalCriarComentario({
             disabled={enviando}
             className="w-[420px] max-w-full bg-[#6A38F3] text-white rounded-full py-3 text-lg font-medium shadow-md hover:bg-[#5a2ce0] transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
-            {enviando ? "Enviando..." : "Avaliar"}
+            {enviando ? "Enviando..." : "Comentar"}
           </button>
         </div>
       </form>

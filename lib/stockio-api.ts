@@ -36,6 +36,7 @@ export type AvaliacaoProduto = {
   produtoId: number;
   nota: number;
   comentario?: string | null;
+  usuario?: { id: number; nome?: string | null; username?: string | null; fotoPerfilUrl?: string | null } | null;
 };
 
 export type CategoriaBackend = {
@@ -181,6 +182,7 @@ export const avaliacoesLojaApi = {
     if (filtro?.usuarioId) params.set("usuarioId", String(filtro.usuarioId));
     return request<AvaliacaoLoja[]>(`/avaliacao-loja${params.size ? `?${params}` : ""}`);
   },
+  buscar: (id: number) => request<AvaliacaoLoja>(`/avaliacao-loja/${id}`),
   criar: (data: { lojaId: number; nota: number; comentario?: string }) =>
     request<AvaliacaoLoja>("/avaliacao-loja", { method: "POST", body: json(data) }, true),
   atualizar: (id: number, data: { nota?: number; comentario?: string }) =>
@@ -196,6 +198,7 @@ export const avaliacoesProdutoApi = {
     if (filtro?.usuarioId) params.set("usuarioId", String(filtro.usuarioId));
     return request<AvaliacaoProduto[]>(`/avaliacao-produto${params.size ? `?${params}` : ""}`, { signal });
   },
+  buscar: (id: number) => request<AvaliacaoProduto>(`/avaliacao-produto/${id}`),
 };
 
 type ProdutoEdicao = { nome: string; descricao: string; preco: number; estoque: number; categoriaId?: number };
