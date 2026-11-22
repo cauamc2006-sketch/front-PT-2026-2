@@ -19,6 +19,7 @@ export type Comentario = {
   avaliacaoLojaId?: number | null;
   avaliacaoProdutoId?: number | null;
   usuario?: { id: number; nome: string; username: string; fotoPerfilUrl?: string | null };
+  criadoEm?: string;
 };
 
 export type AvaliacaoLoja = {
@@ -27,6 +28,7 @@ export type AvaliacaoLoja = {
   lojaId: number;
   nota: number;
   comentario?: string | null;
+  criadoEm?: string;
   usuario?: { id: number; nome?: string | null; username?: string | null; fotoPerfilUrl?: string | null } | null;
 };
 
@@ -36,6 +38,7 @@ export type AvaliacaoProduto = {
   produtoId: number;
   nota: number;
   comentario?: string | null;
+  criadoEm?: string;
   usuario?: { id: number; nome?: string | null; username?: string | null; fotoPerfilUrl?: string | null } | null;
 };
 
@@ -199,6 +202,10 @@ export const avaliacoesProdutoApi = {
     return request<AvaliacaoProduto[]>(`/avaliacao-produto${params.size ? `?${params}` : ""}`, { signal });
   },
   buscar: (id: number) => request<AvaliacaoProduto>(`/avaliacao-produto/${id}`),
+  atualizar: (id: number, data: { nota?: number; comentario?: string }) =>
+    request<AvaliacaoProduto>(`/avaliacao-produto/${id}`, { method: "PATCH", body: json(data) }, true),
+  excluir: (id: number) =>
+    request<AvaliacaoProduto>(`/avaliacao-produto/${id}`, { method: "DELETE" }, true),
 };
 
 type ProdutoEdicao = { nome: string; descricao: string; preco: number; estoque: number; categoriaId?: number };

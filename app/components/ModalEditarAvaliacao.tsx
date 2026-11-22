@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { avaliacoesLojaApi, type AvaliacaoLoja } from "@/lib/stockio-api";
+import { avaliacoesLojaApi, avaliacoesProdutoApi, type AvaliacaoLoja, type AvaliacaoProduto } from "@/lib/stockio-api";
 
 interface ModalEditarAvaliacaoProps {
   isOpen: boolean;
   onClose: () => void;
-  avaliacao: AvaliacaoLoja | null;
+  avaliacao: AvaliacaoLoja | AvaliacaoProduto | null;
   lojaNome: string;
-  onAvaliacaoAtualizada?: (avaliacaoAtualizada: AvaliacaoLoja) => void;
+  tipo?: "loja" | "produto";
+  onAvaliacaoAtualizada?: (avaliacaoAtualizada: AvaliacaoLoja | AvaliacaoProduto) => void;
   onAvaliacaoExcluida?: (avaliacaoId: number) => void;
 }
 
@@ -51,6 +52,7 @@ export default function ModalEditarAvaliacao({
   onClose,
   avaliacao,
   lojaNome,
+  tipo = "loja",
   onAvaliacaoAtualizada,
   onAvaliacaoExcluida,
 }: ModalEditarAvaliacaoProps) {
@@ -73,17 +75,17 @@ export default function ModalEditarAvaliacao({
     if (!avaliacao) return;
     setErro(null);
 
-    if (nota < 1 || nota > 5) {
-      setErro("Selecione uma nota de 1 a 5 estrelas.");
+    if (nota < 0 || nota > 5) {
+      setErro("Selecione uma nota de 0 a 5 estrelas.");
       return;
     }
 
     setEnviando(true);
     try {
-      const atualizada = await avaliacoesLojaApi.atualizar(avaliacao.id, {
-        nota,
-        comentario: comentario.trim(),
-      });
+      const dados = { nota, comentario: comentario.trim() };
+      const atualizada = tipo === "loja"
+        ? await avaliacoesLojaApi.atualizar(avaliacao.id, dados)
+        : await avaliacoesProdutoApi.atualizar(avaliacao.id, dados);
 
       onAvaliacaoAtualizada?.(atualizada);
       setNotaHover(0);
@@ -110,7 +112,11 @@ export default function ModalEditarAvaliacao({
     setErro(null);
     setExcluindo(true);
     try {
-      await avaliacoesLojaApi.excluir(avaliacao.id);
+      if (tipo === "loja") {
+        await avaliacoesLojaApi.excluir(avaliacao.id);
+      } else {
+        await avaliacoesProdutoApi.excluir(avaliacao.id);
+      }
       onAvaliacaoExcluida?.(avaliacao.id);
       setNotaHover(0);
       setErro(null);
@@ -177,6 +183,8 @@ export default function ModalEditarAvaliacao({
           ))}
         </div>
 
+        <button type="button" disabled={ocupado} onClick={() => setNota(0)} aria-pressed={nota === 0} className="mx-auto mb-5 block rounded-full px-4 py-1 text-sm text-[#5A3CF0] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-[#5A3CF0] disabled:opacity-50">Alterar para 0 estrelas</button>
+
         {/* Campo de Comentário */}
         <textarea
           id="editar-avaliacao"
@@ -185,7 +193,7 @@ export default function ModalEditarAvaliacao({
           disabled={ocupado}
           value={comentario}
           onChange={(e) => setComentario(e.target.value)}
-          placeholder="Avaliação da loja"
+          placeholder={tipo === "loja" ? "Avaliação da loja" : "Avaliação do produto"}
           className="w-full bg-white rounded-[24px] p-6 outline-none text-black h-64 resize-none placeholder:font-light placeholder:text-gray-400 shadow-sm focus:ring-1 focus:ring-[#6A38F3] mb-6"
         />
 

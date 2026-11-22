@@ -35,7 +35,7 @@ function EstrelaAvaliacao({
       className="cursor-pointer transition-transform hover:scale-110 focus:outline-none"
     >
       <Image
-        src={preenchida ? "/lojas/estrela-cheia.svg" : "/modais/estrela-borda.svg"}
+        src={preenchida ? "/lojas/estrela-cheia.svg" : "/Modais/estrela-borda.svg"}
         alt=""
         width={64}
         height={61}
@@ -53,6 +53,7 @@ export default function ModalAvaliarLoja({
   onAvaliacaoCriada,
 }: ModalAvaliarLojaProps) {
   const [nota, setNota] = useState(0);
+  const [notaSelecionada, setNotaSelecionada] = useState(false);
   const [notaHover, setNotaHover] = useState(0);
   const [comentario, setComentario] = useState("");
   const [enviando, setEnviando] = useState(false);
@@ -60,6 +61,7 @@ export default function ModalAvaliarLoja({
 
   function limparFormulario() {
     setNota(0);
+    setNotaSelecionada(false);
     setNotaHover(0);
     setComentario("");
     setErro(null);
@@ -74,8 +76,8 @@ export default function ModalAvaliarLoja({
     e.preventDefault();
     setErro(null);
 
-    if (nota < 1 || nota > 5) {
-      setErro("Selecione uma nota de 1 a 5 estrelas.");
+    if (!notaSelecionada || nota < 0 || nota > 5) {
+      setErro("Selecione uma nota de 0 a 5 estrelas.");
       return;
     }
 
@@ -139,12 +141,14 @@ export default function ModalAvaliarLoja({
               key={estrela}
               indice={estrela}
               preenchida={estrela <= notaExibida}
-              onClick={() => setNota(estrela)}
+              onClick={() => { setNota(estrela); setNotaSelecionada(true); }}
               onMouseEnter={() => setNotaHover(estrela)}
               onMouseLeave={() => setNotaHover(0)}
             />
           ))}
         </div>
+
+        <button type="button" onClick={() => { setNota(0); setNotaSelecionada(true); }} aria-pressed={notaSelecionada && nota === 0} className="mx-auto mb-5 block rounded-full px-4 py-1 text-sm text-[#5A3CF0] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-[#5A3CF0]">Avaliar com 0 estrelas</button>
 
         {/* Campo de Comentário */}
         <textarea
