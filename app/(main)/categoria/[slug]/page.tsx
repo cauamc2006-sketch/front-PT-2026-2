@@ -521,6 +521,7 @@ function ConteudoCategoria() {
 
               return (
                 <CardProduto
+                  produtoId={p.id}
                   key={p.id}
                   imagemUrl={firstImage}
                   nome={p.nome}

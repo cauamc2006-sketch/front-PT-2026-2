@@ -427,6 +427,7 @@ function LojaEspecificaConteudo({ params }: { params: Promise<{ id: string }> })
 							{produtosMelhorAvaliados.map((produto) => (
 								<div key={produto.id} className="w-[220px] flex-shrink-0">
 									<CardProduto
+										produtoId={produto.id}
 										imagemUrl={produto.imagens?.[0]?.urlImagem}
 										nome={produto.nome}
 										preco={formatPrice(produto.preco)}
@@ -456,6 +457,7 @@ function LojaEspecificaConteudo({ params }: { params: Promise<{ id: string }> })
 							<div className="w-full grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 gap-y-12 mb-16">
 								{produtosExibidos.map((produto) => (
 									<CardProduto
+										produtoId={produto.id}
 										key={produto.id}
 										imagemUrl={produto.imagens?.[0]?.urlImagem}
 										nome={produto.nome}

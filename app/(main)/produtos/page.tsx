@@ -58,7 +58,7 @@ export default function ProdutosPage() {
             {products.map((product) => (
               <article key={product.id} className="overflow-hidden rounded-3xl bg-white p-4 shadow-sm">
                 <ProductImageCard name={product.nome} images={product.imagens} />
-                <div className="pt-4"><h2 className="text-xl font-extrabold">{product.nome}</h2><p className="mt-1 line-clamp-2 text-sm text-ink/70">{product.descricao || "Sem descrição"}</p><p className="mt-3 text-xl font-bold text-brand">{formatPrice(product.preco)}</p><p className="mt-1 text-sm">{product.estoque > 0 ? `${product.estoque} em estoque` : "Sem estoque"}</p></div>
+                <div className="pt-4"><h2 className="text-xl font-extrabold"><Link href={`/produtos/${product.id}`} className="hover:underline">{product.nome}</Link></h2><p className="mt-1 line-clamp-2 text-sm text-ink/70">{product.descricao || "Sem descrição"}</p><p className="mt-3 text-xl font-bold text-brand">{formatPrice(product.preco)}</p><p className="mt-1 text-sm">{product.estoque > 0 ? `${product.estoque} em estoque` : "Sem estoque"}</p></div>
               </article>
             ))}
           </div>

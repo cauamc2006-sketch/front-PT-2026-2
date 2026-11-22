@@ -3,16 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import React, { Suspense, useSyncExternalStore } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { clearSession, readSession, SESSION_CHANGED } from '@/lib/session';
-
-function subscribeSession(listener: () => void) {
-  window.addEventListener('storage', listener);
-  window.addEventListener(SESSION_CHANGED, listener);
-  return () => {
-    window.removeEventListener('storage', listener);
-    window.removeEventListener(SESSION_CHANGED, listener);
-  };
-}
+import { clearSession, readSession, subscribeSession } from '@/lib/session';
 
 function getSessionSnapshot() {
   return readSession() !== null;
