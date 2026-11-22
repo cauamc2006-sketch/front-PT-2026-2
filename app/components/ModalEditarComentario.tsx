@@ -44,7 +44,8 @@ export default function ModalEditarComentario({
       );
 
       onComentarioAtualizado?.(comentarioAtualizado);
-      handleFechar();
+      setErro(null);
+      onClose();
     } catch (error: unknown) {
       const mensagem =
         error instanceof Error
@@ -62,13 +63,18 @@ export default function ModalEditarComentario({
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
       onClick={handleFechar}
-      role="presentation"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="titulo-editar-comentario"
     >
       <form
         onSubmit={handleSubmit}
         className="bg-[#EEEEEE] w-[720px] max-w-full rounded-[32px] px-12 pt-14 pb-10 relative flex flex-col shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
+        <h2 id="titulo-editar-comentario" className="sr-only">
+          Editar comentário
+        </h2>
         {/* Botão Fechar */}
         <button
           type="button"

@@ -86,7 +86,9 @@ export default function ModalEditarAvaliacao({
       });
 
       onAvaliacaoAtualizada?.(atualizada);
-      handleFechar();
+      setNotaHover(0);
+      setErro(null);
+      onClose();
     } catch (error: unknown) {
       const mensagem =
         error instanceof Error
@@ -110,7 +112,9 @@ export default function ModalEditarAvaliacao({
     try {
       await avaliacoesLojaApi.excluir(avaliacao.id);
       onAvaliacaoExcluida?.(avaliacao.id);
-      handleFechar();
+      setNotaHover(0);
+      setErro(null);
+      onClose();
     } catch (error: unknown) {
       const mensagem =
         error instanceof Error
@@ -131,7 +135,9 @@ export default function ModalEditarAvaliacao({
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
       onClick={handleFechar}
-      role="presentation"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="titulo-editar-avaliacao"
     >
       <form
         onSubmit={handleSubmit}
@@ -150,7 +156,7 @@ export default function ModalEditarAvaliacao({
         </button>
 
         {/* Título */}
-        <h2 className="text-3xl font-light text-black mb-8 mt-1 text-left">
+        <h2 id="titulo-editar-avaliacao" className="text-3xl font-light text-black mb-8 mt-1 text-left">
           Você está avaliando <span className="font-semibold">{lojaNome}</span>
         </h2>
 

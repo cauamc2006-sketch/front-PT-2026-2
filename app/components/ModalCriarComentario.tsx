@@ -57,7 +57,8 @@ export default function ModalCriarComentario({
       });
 
       onComentarioCriado?.(comentarioCriado);
-      handleFechar();
+      limparFormulario();
+      onClose();
     } catch (error: unknown) {
       const mensagem =
         error instanceof Error
@@ -75,13 +76,18 @@ export default function ModalCriarComentario({
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
       onClick={handleFechar}
-      role="presentation"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="titulo-criar-comentario"
     >
       <form
         onSubmit={handleSubmit}
         className="bg-[#EEEEEE] w-[720px] max-w-full rounded-[32px] px-12 pt-14 pb-10 relative flex flex-col shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
+        <h2 id="titulo-criar-comentario" className="sr-only">
+          Adicionar comentário
+        </h2>
         {/* Botão Fechar */}
         <button
           type="button"

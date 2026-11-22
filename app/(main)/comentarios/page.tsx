@@ -114,7 +114,7 @@ function ComentariosContent() {
   const souAutor = Boolean(avaliacao && usuarioId === avaliacao.usuarioId);
   const tituloContexto = contexto.tipo === "loja" ? "Avaliação de loja" : "Avaliação de produto";
 
-  return <main className="min-h-screen bg-[#f7f1e1] text-[#181a19]">
+  return <div className="min-h-screen bg-[#f7f1e1] text-[#181a19]">
     <header className="bg-[#111311] px-5 pb-14 pt-8 text-white sm:pb-20 sm:pt-10"><div className="mx-auto max-w-5xl">
       <button type="button" onClick={() => router.back()} className="rounded-full border border-white/20 px-4 py-2 text-sm transition hover:border-white/50">← Voltar</button>
       {avaliacao && <article className="mt-10 max-w-3xl"><div className="flex flex-wrap items-center justify-between gap-4"><p className="text-xs font-bold uppercase tracking-[.22em] text-[#b7ee00]">{tituloContexto} #{avaliacao.id}</p>{souAutor && contexto.tipo === "loja" && <button type="button" onClick={() => setEditandoAvaliacao(true)} className="rounded-full border border-white/30 px-4 py-2 text-sm font-semibold hover:bg-white hover:text-black">Editar avaliação</button>}</div>
@@ -133,7 +133,7 @@ function ComentariosContent() {
     <ModalCriarComentario isOpen={criando} onClose={() => setCriando(false)} {...(contexto.tipo === "loja" ? { avaliacaoLojaId: contexto.id } : { avaliacaoProdutoId: contexto.id })} onComentarioCriado={(novo) => { setComentarios((atuais) => [novo, ...atuais]); setAviso("Comentário publicado com sucesso."); }} />
     {editando && <ModalEditarComentario isOpen comentario={editando} onClose={() => setEditando(null)} onComentarioAtualizado={(atualizado) => { setComentarios((atuais) => atuais.map((item) => item.id === atualizado.id ? atualizado : item)); setAviso("Comentário atualizado com sucesso."); }} />}
     {contexto.tipo === "loja" && editandoAvaliacao && <ModalEditarAvaliacao isOpen onClose={() => setEditandoAvaliacao(false)} avaliacao={avaliacao as AvaliacaoLoja | null} lojaNome="esta loja" onAvaliacaoAtualizada={(atualizada) => { setAvaliacao(atualizada); setAviso("Avaliação atualizada com sucesso."); }} onAvaliacaoExcluida={() => router.push("/lojas")} />}
-  </main>;
+  </div>;
 }
 
 export default function ComentariosPage() {
