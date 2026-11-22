@@ -196,6 +196,12 @@ export const avaliacoesProdutoApi = {
     if (filtro?.usuarioId) params.set("usuarioId", String(filtro.usuarioId));
     return request<AvaliacaoProduto[]>(`/avaliacao-produto${params.size ? `?${params}` : ""}`, { signal });
   },
+  criar: (data: { produtoId: number; nota: number; comentario?: string }) =>
+    request<AvaliacaoProduto>("/avaliacao-produto", { method: "POST", body: json(data) }, true),
+  atualizar: (id: number, data: { nota?: number; comentario?: string }) =>
+    request<AvaliacaoProduto>(`/avaliacao-produto/${id}`, { method: "PATCH", body: json(data) }, true),
+  excluir: (id: number) =>
+    request<AvaliacaoProduto>(`/avaliacao-produto/${id}`, { method: "DELETE" }, true),
 };
 
 type ProdutoEdicao = { nome: string; descricao: string; preco: number; estoque: number; categoriaId?: number };

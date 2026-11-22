@@ -2,14 +2,23 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { avaliacoesLojaApi, type AvaliacaoLoja } from "@/lib/stockio-api";
+import {
+  avaliacoesLojaApi,
+  avaliacoesProdutoApi,
+  type AvaliacaoLoja,
+  type AvaliacaoProduto,
+} from "@/lib/stockio-api";
+
+type AvaliacaoEditavel = AvaliacaoLoja | AvaliacaoProduto;
 
 interface ModalEditarAvaliacaoProps {
   isOpen: boolean;
   onClose: () => void;
-  avaliacao: AvaliacaoLoja | null;
-  lojaNome: string;
-  onAvaliacaoAtualizada?: (avaliacaoAtualizada: AvaliacaoLoja) => void;
+  tipo?: "loja" | "produto";
+  avaliacao: AvaliacaoEditavel | null;
+  alvoNome?: string;
+  lojaNome?: string;
+  onAvaliacaoAtualizada?: (avaliacaoAtualizada: AvaliacaoEditavel) => void;
   onAvaliacaoExcluida?: (avaliacaoId: number) => void;
 }
 
@@ -49,7 +58,9 @@ function EstrelaAvaliacao({
 export default function ModalEditarAvaliacao({
   isOpen,
   onClose,
+  tipo = "loja",
   avaliacao,
+  alvoNome,
   lojaNome,
   onAvaliacaoAtualizada,
   onAvaliacaoExcluida,
@@ -60,6 +71,9 @@ export default function ModalEditarAvaliacao({
   const [enviando, setEnviando] = useState(false);
   const [excluindo, setExcluindo] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+
+  const nomeExibido = alvoNome ?? lojaNome ?? "";
+  const api = tipo === "produto" ? avaliacoesProdutoApi : avaliacoesLojaApi;
 
   useEffect(() => {
     if (!isOpen || !avaliacao) return;
@@ -87,7 +101,7 @@ export default function ModalEditarAvaliacao({
 
     setEnviando(true);
     try {
-      const atualizada = await avaliacoesLojaApi.atualizar(avaliacao.id, {
+      const atualizada = await api.atualizar(avaliacao.id, {
         nota,
         comentario: comentario.trim(),
       });
@@ -115,7 +129,7 @@ export default function ModalEditarAvaliacao({
     setErro(null);
     setExcluindo(true);
     try {
-      await avaliacoesLojaApi.excluir(avaliacao.id);
+      await api.excluir(avaliacao.id);
       onAvaliacaoExcluida?.(avaliacao.id);
       handleFechar();
     } catch (error: unknown) {
@@ -156,7 +170,7 @@ export default function ModalEditarAvaliacao({
 
         {/* Título */}
         <h2 className="text-3xl font-light text-black mb-8 mt-1 text-left">
-          Você está avaliando <span className="font-semibold">{lojaNome}</span>
+          Você está avaliando <span className="font-semibold">{nomeExibido}</span>
         </h2>
 
         {/* Seletor de 5 Estrelas */}
@@ -180,7 +194,9 @@ export default function ModalEditarAvaliacao({
         <textarea
           value={comentario}
           onChange={(e) => setComentario(e.target.value)}
-          placeholder="Avaliação da loja"
+          placeholder={
+            tipo === "produto" ? "Avaliação do produto" : "Avaliação da loja"
+          }
           className="w-full bg-white rounded-[24px] p-6 outline-none text-black h-64 resize-none placeholder:font-light placeholder:text-gray-400 shadow-sm focus:ring-1 focus:ring-[#6A38F3] mb-6"
         />
 
