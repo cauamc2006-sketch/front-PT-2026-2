@@ -65,9 +65,9 @@ export default function ModalEditarAvaliacao({
   onAvaliacaoAtualizada,
   onAvaliacaoExcluida,
 }: ModalEditarAvaliacaoProps) {
-  const [nota, setNota] = useState(0);
+  const [nota, setNota] = useState(avaliacao?.nota ?? 0);
   const [notaHover, setNotaHover] = useState(0);
-  const [comentario, setComentario] = useState("");
+  const [comentario, setComentario] = useState(avaliacao?.comentario ?? "");
   const [enviando, setEnviando] = useState(false);
   const [excluindo, setExcluindo] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -77,10 +77,15 @@ export default function ModalEditarAvaliacao({
 
   useEffect(() => {
     if (!isOpen || !avaliacao) return;
-    setNota(avaliacao.nota);
-    setNotaHover(0);
-    setComentario(avaliacao.comentario ?? "");
-    setErro(null);
+    // Sincronização assíncrona quando uma avaliação diferente é aberta.
+    // Evita setState síncrono no effect sem alterar o comportamento do formulário.
+    const tarefa = window.setTimeout(() => {
+      setNota(avaliacao.nota);
+      setNotaHover(0);
+      setComentario(avaliacao.comentario ?? "");
+      setErro(null);
+    }, 0);
+    return () => window.clearTimeout(tarefa);
   }, [isOpen, avaliacao]);
 
   function handleFechar() {
@@ -108,7 +113,7 @@ export default function ModalEditarAvaliacao({
       });
 
       onAvaliacaoAtualizada?.(atualizada);
-      handleFechar();
+      onClose();
     } catch (error: unknown) {
       const mensagem =
         error instanceof Error
@@ -132,7 +137,7 @@ export default function ModalEditarAvaliacao({
     try {
       await api.excluir(avaliacao.id);
       onAvaliacaoExcluida?.(avaliacao.id);
-      handleFechar();
+      onClose();
     } catch (error: unknown) {
       const mensagem =
         error instanceof Error

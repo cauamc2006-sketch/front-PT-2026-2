@@ -112,6 +112,9 @@ function ComentariosContent() {
   const [editando, setEditando] = useState<Comentario | null>(null);
   const [editandoAvaliacao, setEditandoAvaliacao] = useState(false);
   const [excluindoId, setExcluindoId] = useState<number | null>(null);
+  const [tipoBusca, setTipoBusca] = useState<"loja" | "produto">("loja");
+  const [idBusca, setIdBusca] = useState("");
+  const [erroBusca, setErroBusca] = useState("");
   const requisicaoAtual = useRef(0);
 
   const carregar = useCallback(async () => {
@@ -217,10 +220,31 @@ function ComentariosContent() {
   }
 
   if (!contexto) {
-    return <main className="min-h-[75vh] px-6 py-24 text-center" style={{ backgroundColor: FUNDO }}>
-      <h1 className="text-2xl font-semibold">Avaliação não informada</h1>
-      <p className="mx-auto mt-4 max-w-md text-gray-600">Abra esta página a partir de uma avaliação de loja ou produto.</p>
-      <Link href="/lojas" className="mt-8 inline-flex rounded-full bg-black px-8 py-3 font-medium text-white">Ver lojas</Link>
+    return <main className="min-h-[75vh] px-5 py-16 sm:py-24" style={{ backgroundColor: FUNDO }}>
+      <section className="mx-auto max-w-xl rounded-3xl bg-white p-6 shadow-sm sm:p-10" aria-labelledby="titulo-localizar-avaliacao">
+        <h1 id="titulo-localizar-avaliacao" className="text-2xl font-semibold">Localizar uma avaliação</h1>
+        <p className="mt-3 text-sm text-gray-600">Selecione o tipo e informe o ID da avaliação, não o ID da loja ou produto.</p>
+        <form className="mt-8 space-y-5" onSubmit={(event) => {
+          event.preventDefault();
+          const id = idPositivo(idBusca);
+          if (id === null) { setErroBusca("Informe um ID de avaliação inteiro e positivo."); return; }
+          setErroBusca("");
+          const parametro = tipoBusca === "loja" ? "avaliacaoLojaId" : "avaliacaoProdutoId";
+          router.push("/comentarios?" + parametro + "=" + id);
+        }}>
+          <label className="block text-sm font-medium">Tipo de avaliação
+            <select value={tipoBusca} onChange={(event) => { setTipoBusca(event.target.value as "loja" | "produto"); setErroBusca(""); }} className="mt-2 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3">
+              <option value="loja">Loja</option><option value="produto">Produto</option>
+            </select>
+          </label>
+          <label className="block text-sm font-medium">Identificador da avaliação
+            <input type="number" min={1} step={1} required value={idBusca} onChange={(event) => { setIdBusca(event.target.value); setErroBusca(""); }} className="mt-2 block w-full rounded-xl border border-gray-300 px-4 py-3" placeholder="Ex.: 2" />
+          </label>
+          {erroBusca && <p role="alert" className="text-sm text-red-700">{erroBusca}</p>}
+          <button type="submit" className="w-full rounded-full bg-[#6A38F3] px-6 py-3 font-medium text-white hover:bg-[#5B2FD1]">Buscar avaliação</button>
+        </form>
+        <Link href="/lojas" className="mt-6 inline-block text-sm font-medium text-[#6A38F3] hover:underline">Ver lojas</Link>
+      </section>
     </main>;
   }
 
