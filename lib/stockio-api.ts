@@ -18,7 +18,6 @@ export type Comentario = {
   usuarioId: number;
   avaliacaoLojaId?: number | null;
   avaliacaoProdutoId?: number | null;
-  criadoEm?: string;
   usuario?: { id: number; nome: string; username: string; fotoPerfilUrl?: string | null };
 };
 
@@ -28,7 +27,6 @@ export type AvaliacaoLoja = {
   lojaId: number;
   nota: number;
   comentario?: string | null;
-  criadoEm?: string;
   usuario?: { id: number; nome?: string | null; username?: string | null; fotoPerfilUrl?: string | null } | null;
 };
 
@@ -38,8 +36,6 @@ export type AvaliacaoProduto = {
   produtoId: number;
   nota: number;
   comentario?: string | null;
-  criadoEm?: string;
-  usuario?: { id: number; nome?: string | null; username?: string | null; fotoPerfilUrl?: string | null } | null;
 };
 
 export type CategoriaBackend = {
@@ -185,7 +181,6 @@ export const avaliacoesLojaApi = {
     if (filtro?.usuarioId) params.set("usuarioId", String(filtro.usuarioId));
     return request<AvaliacaoLoja[]>(`/avaliacao-loja${params.size ? `?${params}` : ""}`);
   },
-  buscar: (id: number) => request<AvaliacaoLoja>(`/avaliacao-loja/${id}`),
   criar: (data: { lojaId: number; nota: number; comentario?: string }) =>
     request<AvaliacaoLoja>("/avaliacao-loja", { method: "POST", body: json(data) }, true),
   atualizar: (id: number, data: { nota?: number; comentario?: string }) =>
@@ -201,7 +196,6 @@ export const avaliacoesProdutoApi = {
     if (filtro?.usuarioId) params.set("usuarioId", String(filtro.usuarioId));
     return request<AvaliacaoProduto[]>(`/avaliacao-produto${params.size ? `?${params}` : ""}`, { signal });
   },
-  buscar: (id: number) => request<AvaliacaoProduto>(`/avaliacao-produto/${id}`),
   criar: (data: { produtoId: number; nota: number; comentario?: string }) =>
     request<AvaliacaoProduto>("/avaliacao-produto", { method: "POST", body: json(data) }, true),
   atualizar: (id: number, data: { nota?: number; comentario?: string }) =>
