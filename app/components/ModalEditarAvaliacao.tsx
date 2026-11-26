@@ -45,7 +45,7 @@ function EstrelaAvaliacao({
       className="cursor-pointer transition-transform hover:scale-110 focus:outline-none"
     >
       <Image
-        src={preenchida ? "/lojas/estrela-cheia.svg" : "/modais/estrela-borda.svg"}
+        src={preenchida ? "/lojas/estrela-cheia.svg" : "/Modais/estrela-borda.svg"}
         alt=""
         width={64}
         height={61}
@@ -65,9 +65,9 @@ export default function ModalEditarAvaliacao({
   onAvaliacaoAtualizada,
   onAvaliacaoExcluida,
 }: ModalEditarAvaliacaoProps) {
-  const [nota, setNota] = useState(0);
+  const [nota, setNota] = useState(avaliacao?.nota ?? 0);
   const [notaHover, setNotaHover] = useState(0);
-  const [comentario, setComentario] = useState("");
+  const [comentario, setComentario] = useState(avaliacao?.comentario ?? "");
   const [enviando, setEnviando] = useState(false);
   const [excluindo, setExcluindo] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -77,13 +77,19 @@ export default function ModalEditarAvaliacao({
 
   useEffect(() => {
     if (!isOpen || !avaliacao) return;
-    setNota(avaliacao.nota);
-    setNotaHover(0);
-    setComentario(avaliacao.comentario ?? "");
-    setErro(null);
+    // Sincronização assíncrona quando uma avaliação diferente é aberta.
+    // Evita setState síncrono no effect sem alterar o comportamento do formulário.
+    const tarefa = window.setTimeout(() => {
+      setNota(avaliacao.nota);
+      setNotaHover(0);
+      setComentario(avaliacao.comentario ?? "");
+      setErro(null);
+    }, 0);
+    return () => window.clearTimeout(tarefa);
   }, [isOpen, avaliacao]);
 
   function handleFechar() {
+    if (enviando || excluindo) return;
     setNotaHover(0);
     setErro(null);
     onClose();
@@ -94,8 +100,8 @@ export default function ModalEditarAvaliacao({
     if (!avaliacao) return;
     setErro(null);
 
-    if (nota < 1 || nota > 5) {
-      setErro("Selecione uma nota de 1 a 5 estrelas.");
+    if (!Number.isInteger(nota) || nota < 0 || nota > 5) {
+      setErro("Selecione uma nota de 0 a 5 estrelas.");
       return;
     }
 
@@ -107,7 +113,7 @@ export default function ModalEditarAvaliacao({
       });
 
       onAvaliacaoAtualizada?.(atualizada);
-      handleFechar();
+      onClose();
     } catch (error: unknown) {
       const mensagem =
         error instanceof Error
@@ -131,7 +137,7 @@ export default function ModalEditarAvaliacao({
     try {
       await api.excluir(avaliacao.id);
       onAvaliacaoExcluida?.(avaliacao.id);
-      handleFechar();
+      onClose();
     } catch (error: unknown) {
       const mensagem =
         error instanceof Error
@@ -152,6 +158,9 @@ export default function ModalEditarAvaliacao({
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
       onClick={handleFechar}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="titulo-editar-avaliacao"
     >
       <form
         onSubmit={handleSubmit}
@@ -162,6 +171,7 @@ export default function ModalEditarAvaliacao({
         <button
           type="button"
           onClick={handleFechar}
+          disabled={ocupado}
           className="absolute top-6 right-7 text-3xl font-light text-black hover:text-[#6A38F3] transition-colors cursor-pointer"
           aria-label="Fechar modal"
         >
@@ -169,7 +179,7 @@ export default function ModalEditarAvaliacao({
         </button>
 
         {/* Título */}
-        <h2 className="text-3xl font-light text-black mb-8 mt-1 text-left">
+        <h2 id="titulo-editar-avaliacao" className="text-3xl font-light text-black mb-8 mt-1 text-left">
           Você está avaliando <span className="font-semibold">{nomeExibido}</span>
         </h2>
 
@@ -190,8 +200,14 @@ export default function ModalEditarAvaliacao({
           ))}
         </div>
 
+        <button type="button" disabled={ocupado} onClick={() => setNota(0)} aria-pressed={nota === 0} className="mx-auto mb-5 block rounded-full px-4 py-1 text-sm text-[#5A3CF0] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-[#5A3CF0] disabled:opacity-50">Alterar para 0 estrelas</button>
+
         {/* Campo de Comentário */}
         <textarea
+          id="editar-avaliacao"
+          aria-label="Texto da avaliação"
+          maxLength={2000}
+          disabled={ocupado}
           value={comentario}
           onChange={(e) => setComentario(e.target.value)}
           placeholder={
